@@ -1,0 +1,33 @@
+    vector<vector<int>> criticalConnections(int n, vector<vector<int>>& connections) {
+        vector<vector<int>> graph(n);
+        auto makegraph = [&](){
+              for(auto& con : connections){
+                  graph[con[0]].push_back(con[1]);
+                  graph[con[1]].push_back(con[0]);
+              }
+        };
+        makegraph();
+        vector<vector<int>> res;
+        vector<int> rank(n, -1);//保存时间戳
+        function<int(int, int)> dfs = [&](int now, int currank){
+            if(rank[now] > 0)//该节点已被遍历过
+                return rank[now];//返回该节点的时间戳
+            int min_rank = currank;
+            rank[now] = currank;//更新当前节点的时间戳
+            for(auto& nei : graph[now]){
+                if(rank[nei] == currank - 1 || rank[nei] == n)//此时nei为当前节点的父节点或rank[nei]已经visit过,跳过
+                    continue;
+                int nextrank = dfs(nei, currank + 1);//获得下一个节点的时间戳
+                min_rank = min(min_rank, nextrank);//min_rank为当前节点深搜路径上的最小时间戳
+                /*如果当前节点深搜路径上的最小时间戳小于当前时间戳,说明当前节点能回到之前的节点(以为深搜可以看成有向的,所以可以判断当前节点在一个环中,因为只有这样才能回到之前的节点),而环中的边一定不是成为桥,反之为桥*/
+                if(nextrank > currank){
+    //深搜完毕后当前节点的时间戳小于下一个节点,说明当前节点不在与下一个节点所在的环中,即当前节点与下一个节点构成桥
+                    res.push_back({now,nei});
+                }  
+            }
+            rank[now] = n;//当前节点已被访问,保证深搜的有向性
+            return min_rank;//返回当前深搜路径上的最小时间戳
+        };
+        dfs(0,1);
+        return res;
+    }

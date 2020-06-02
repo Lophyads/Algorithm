@@ -1,0 +1,37 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <unordered_set>
+using namespace std;
+using PII=pair<int,int>;
+//思想：从某一点开始，通过优先队列筛选出最短边，把它添加到最小生成树里，直到所有顶点都被访问
+int Prim(vector<vector<PII>>& graph){
+    int n=graph.size();
+    int cost=0;//记录最小生成树的总权重
+    vector<int> seen(n,0);
+    priority_queue<PII,vector<PII>,greater<PII> >pq;
+    pq.push({0,0});
+    for (int i = 0; i <n ; ++i) {
+        while(true){
+            int w=pq.top().first,v=pq.top().second;
+            pq.pop();
+            cost+=w;
+            if(seen[v]++) continue;
+            for(auto& e:graph[v]){
+                if(seen[e.first]) continue;
+                pq.push({e.second,e.first});
+            }
+            break;
+        }
+    }
+    return cost;
+}
+int main(int argc,char** argv){
+    vector<vector<int>> edges{{0,1,1},{0,3,3},{0,2,6},{2,3,2},{1,2,4},{1,3,5}};
+    vector<vector<pair<int, int>>> g(4);
+    for (const auto& e : edges) {
+        g[e[0]].emplace_back(e[1], e[2]);
+        g[e[1]].emplace_back(e[0], e[2]);
+    }
+    cout<<Prim(g);
+}

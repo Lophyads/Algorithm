@@ -1,0 +1,35 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+
+using namespace std;
+//思想：每次找最小的边，如果边的两端在最小生成树未连通，则把边的两端连通起来，直到所有顶点都是连通的（使用Union-Find实现）
+int kruskal(vector<vector<int>>& edges, int n){
+    sort(edges.begin(),edges.end(),[](const vector<int>& a,const vector<int>& b){
+        return a[2]<b[2];
+    });//按权值由小到大进行排序
+    vector<int> fa(n);
+    int cost=0;
+    iota(fa.begin(),fa.end(),0);
+    function<int(int)> find=[&](int x){
+        if(x!=fa[x]){
+            fa[x]=find(fa[x]);
+        }
+        return fa[x];
+        //return x==fa[x]? x：fa[x]=find(fa[x]);
+    };
+    for(auto& e:edges){
+        int u=e[0],v=e[1],w=e[2];
+        int fu=find(u),fv=find(v);
+        if(fu==fv) continue;
+        fa[fu]=fv;//把边进行Union
+        cost+=w;
+    }
+    return cost;
+}
+int main(int argc,char** argv){
+    vector<vector<int>> edges{{0,1,1},{0,3,3},{0,2,6},{2,3,2},{1,2,4},{1,3,5}};//(u,v,w)
+    cout << kruskal(edges, 4);//n为顶点数量
+}
