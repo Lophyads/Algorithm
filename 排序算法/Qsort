@@ -1,0 +1,44 @@
+#include<stdio.h>
+bool Isvaild=true;
+int Part(int *arr,int low,int high)
+{
+	int temp=arr[low];
+	while(low<high)
+	{
+		while(low<high&&arr[high]>temp)
+		{
+			high--;
+		}
+		arr[low]=arr[high];
+		while(low<high&&arr[low]<temp)
+		{
+			low++;
+		}
+		arr[high]=arr[low];
+	}
+	arr[low]=temp; 
+	return low;
+ } 
+ void Qksort(int *arr,int low,int high)
+ {
+ 	int index=Part(arr,low,high);
+ 	if(low<index-1)
+	 {
+	 	Qksort(arr,low,index-1);
+	 }
+	 if(high>index+1)
+	 {
+	 	Qksort(arr,index+1,high);
+	 }
+ }
+ int main()
+ {
+ 	int arr[7]={1,3,7,4,6,2,5};
+ 	Qksort(arr,0,6);
+ 	for(int i=0;i<=6;i++)
+ 	{
+ 		printf("%d ",arr[i]);
+	 }
+	 return 0;	
+ }
+ 

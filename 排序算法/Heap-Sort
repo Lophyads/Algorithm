@@ -1,0 +1,46 @@
+#include<stdio.h>
+void swap(int a,int b)
+{
+	int tmp=a;
+	a=b;
+	b=tmp;
+}
+void Heapadjust(int* arr,int root,int len)
+{
+	for(int i=root*2+1;i<len;i=i*2+1)
+	{
+		if(i<len-1&&arr[i]<arr[i+1])
+		i++;
+		if(arr[i]>arr[root])
+		{
+			swap(arr[i],arr[root]);
+			root=i;
+		}
+		else
+		break;
+	}
+}
+void Heapsort(int* arr,int len)
+{
+	for(int i=(len-1)/2;i>=0;i--)
+		Heapadjust(arr,i,len);
+	 for(int i=len-1;i>=0;i--)
+	 {
+	 	int temp=arr[0];
+	 	arr[0]=arr[i];
+	 	arr[i]=temp;
+	 	Heapadjust(arr,0,i);
+	 }
+}
+
+int main()
+{
+	int num[12]={1,6,8,9,40,39,28,5,7,23,45,67};
+	Heapsort(num,12);
+	//for(int i=0;i<12;i++)
+		//printf("%d ",num[i]);
+	int k=1;
+	swap(k,k);
+	printf("%d",k);
+	return 0;	
+}
