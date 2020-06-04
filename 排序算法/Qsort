@@ -6,7 +6,7 @@ int Part(int *arr,int low,int high)
 	while(low<high)
 	{
 		while(low<high&&arr[high]>temp)
-		{
+		{//从右往左找到第一个小于枢纽元的元素
 			high--;
 		}
 		arr[low]=arr[high];
