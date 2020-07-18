@@ -1,0 +1,32 @@
+#include<bits/stdc++.h>
+using namespace std;
+int main(){//详解解释https://oi-wiki.org/string/manacher/
+    string s;
+    cin >> s;
+    int len = s.size();
+    string new_s = "#";
+    for(auto& c : s){
+        new_s += c;
+        new_s += '#';
+    }
+    int new_len = new_s.size();
+    vector<int> d(new_len, 0);
+    int mxlen = 0;
+    pair<int,int> ans;
+    //d[i]为以i为中心的不包括两端是‘#’回文串个数
+    for(int i = 0, l = 0, r = -1; i < new_len; i++){//(l,r)左闭右闭区间
+        int k = i >= r ? 1 : min(d[l + r - i], r - i);
+        while(i - k >= 0 and i + k < new_len and new_s[i + k] == new_s[i - k]) k++;
+        d[i] = k;
+        if(i + k - 1 > r){
+            r = i + k - 1;
+            l = i - k + 1;
+        }
+        if((r - l) / 2 > mxlen){
+            mxlen = (r - l) / 2;
+            ans = {(i - k + 1) / 2, (i + k - 1) / 2};
+        }
+    }
+    cout << s.substr(ans.first, ans.second - ans.first) << endl;
+    return 0;
+}
