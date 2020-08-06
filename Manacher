@@ -13,7 +13,7 @@ int main(){//详解解释https://oi-wiki.org/string/manacher/
     vector<int> d(new_len, 0);
     int mxlen = 0;
     pair<int,int> ans;
-    //d[i]为以i为中心的不包括两端是‘#’回文串个数
+    //d[i]为以i为中心的不包括两端是‘#’回文串长度
     for(int i = 0, l = 0, r = -1; i < new_len; i++){//(l,r)左闭右闭区间
         int k = i >= r ? 1 : min(d[l + r - i], r - i);
         while(i - k >= 0 and i + k < new_len and new_s[i + k] == new_s[i - k]) k++;
