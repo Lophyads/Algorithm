@@ -1,0 +1,28 @@
+bool find(int x){
+    _rep(y, 1, m + 1){
+        if(vis[y] || ban[x][y]) continue;
+        vis[y] = 1;
+        if(!match[y] || find(match[y])){
+            match[y] = x;
+            return true;
+        }
+    }
+    return false;
+}
+int main(){
+    ios::sync_with_stdio(false); cin.tie(0);
+    cin >> n >> m >> t;
+    _rep(i, 0, t){
+        int x, y;
+        cin >> x >> y;
+        ban[x][y] = 1;
+    }
+    int ans = 0;
+    _rep(x, 1, n + 1){
+        memset(vis, 0, sizeof vis);
+        if(find(x)) ans ++;
+    }
+    cout << ans << endl;
+    return 0;
+}
+

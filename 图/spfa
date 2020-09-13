@@ -1,0 +1,15 @@
+void spfa(){
+    queue<int> q;
+    _rep(i, 0, 50002) q.push(i), vis[i] = 1;
+    while(!q.empty()){
+        int u = q.front();
+        q.pop();
+        vis[u] = 0;
+        for(auto& [v, w] : g[u]){
+            if(d[v] < d[u] + w){
+                d[v] = d[u] + w;
+                if(!vis[v] ++) q.push(v);
+            }
+        }
+    }
+}

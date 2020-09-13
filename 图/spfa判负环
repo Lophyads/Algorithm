@@ -1,0 +1,26 @@
+bool spfa(double x){
+    int cnt[l + 1],  vis[l + 1];
+    double d[l + 1];
+    queue<int> q;
+   _rep(i, 1, l + 1){
+       q.push(i);
+       vis[i] = 1;
+       d[i] = KINF;
+       cnt[i] = 0;
+   }
+    while(!q.empty()){
+        int u = q.front();
+        q.pop();
+        vis[u] = 0;
+        for(PII& t : g[u]){
+            int v = t.fi, w = t.se;
+            if(d[v] > x * w + d[u] - f[u]){
+                d[v] = x * w + d[u] - f[u];
+                cnt[v] = cnt[u] + 1;
+                if(cnt[v] >= l) return true;
+                if(!vis[v]++) q.push(v);
+            }
+        }
+    }
+    return false;
+}
