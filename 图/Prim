@@ -14,9 +14,9 @@ int Prim(vector<vector<PII>>& graph){
     for (int i = 0; i <n ; ++i) {
         while(true){
             int w=pq.top().first,v=pq.top().second;
-            pq.pop();
-            cost+=w;
+            pq.pop();          
             if(seen[v]++) continue;
+            cost+=w;
             for(auto& e:graph[v]){
                 if(seen[e.first]) continue;
                 pq.push({e.second,e.first});
