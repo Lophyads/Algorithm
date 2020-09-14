@@ -1,0 +1,117 @@
+/*给定 n 个模式串 s和一个文本串 t，求有多少个不同的模式串在文本串里出现过。
+两个模式串不同当且仅当他们编号不同。*/
+const int N = 1e6 + 10;
+int tr[N][26], e[N], fail[N], tot;
+void insert(string s){//把模式串插入到字典树中
+	int u = 0;
+	for(char& c : s){
+		int t = c - 'a';
+		if(!tr[u][t]) tr[u][t] = ++tot;
+		u = tr[u][t];
+	}
+	e[u] ++;
+}
+void build(){//构造AC自动机
+	queue<int> q;
+	int u = 0;
+	_rep(i, 0, 26)
+		if(tr[u][i]) q.push(tr[u][i]);
+	while(!q.empty()){
+		u =  q.front();
+		q.pop();
+		_rep(i, 0, 26){
+			if(tr[u][i]) fail[tr[u][i]] = tr[fail[u]][i], q.push(tr[u][i]);
+			else tr[u][i] = tr[fail[u]][i];	
+		}
+	}
+}
+int query(string s){//查询模式串在匹配串上的个数
+	int u = 0, ans = 0;
+	for(char& c : s){
+		int t = c - 'a';
+		u = tr[u][t];
+		for(int j = u; j && e[j] != -1; j = fail[j])
+			ans += e[j], e[j] = -1;
+	}
+	return ans;
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	int n;
+	cin >> n;
+	string s;
+	_rep(i, 0, n){
+		cin >> s;
+		insert(s);
+	}
+	build();
+	cin >> s;
+	cout << query(s) << endl;
+	return 0;
+} 
+/*有 N 个由小写字母组成的模式串以及一个文本串 T。每个模式串可能会在文本串中出现多次。你需要找出哪些模式串在文本串 T 中出现的次数最多。*/
+const int N = 80 * 156;
+int tr[N][26], fail[N], idx[N], cnt[N], val[N], tot;
+void init(){
+	memset(tr, 0, sizeof tr);
+	memset(fail, 0, sizeof fail);
+	memset(idx, 0, sizeof idx);
+	memset(cnt, 0, sizeof cnt);
+	memset(val, 0, sizeof val);
+	tot = 0;
+}
+void insert(string s, int id){
+	int u = 0;
+	for(char& c : s){
+		int t = c - 'a';
+		if(!tr[u][t]) tr[u][t] = ++tot;
+		u = tr[u][t];
+	}
+	idx[u] = id;
+}
+void build(){
+	queue<int> q;
+	_rep(i, 0, 26)
+		if(tr[0][i]) q.push(tr[0][i]);
+	while(!q.empty()){
+		int u = q.front();
+		q.pop();
+		_rep(i, 0, 26){
+			if(tr[u][i]) fail[tr[u][i]] = tr[fail[u]][i], q.push(tr[u][i]);
+			else tr[u][i] = tr[fail[u]][i];
+		}
+	}
+}
+int query(string s){
+	int res = 0;
+	int u = 0;
+	for(char& c : s){
+		int t = c - 'a';
+		u = tr[u][t];
+		for(int j = u; j; j = fail[j]) val[j] ++;
+	}
+	_rep(i, 1, tot + 1)
+		if(idx[i]) res = max(res, val[i]), cnt[idx[i]] = val[i];
+	return res;
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	int n;
+	while(cin >> n, n){
+		string ss[n + 1];
+		_rep(i, 1, n + 1){
+			cin >> ss[i];
+			insert(ss[i], i);
+		}
+		build();
+		string s;
+		cin >> s;
+		int x = query(s);
+		cout << x << endl;
+		_rep(i, 1, n + 1)
+			if(cnt[i] == x) cout << ss[i] << endl;
+		init();
+	}
+	return 0;
+} 
+

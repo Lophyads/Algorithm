@@ -1,0 +1,26 @@
+vector<int> build(string t){//构造next数组
+    vector<int> nxt{0, 0};
+    int n = t.size();
+    int j = 0;
+    for(int i = 1; i < n; i ++){
+        while(j && s[i] != s[j]) j = nxt[j];
+        if(s[i] == s[j]) j ++;
+        nxt.emplace_back(j);
+    }
+    return nxt;
+}
+vector<int> match(string p, sting t){//查找模式串在匹配串中哪些位置出些过
+    int j = 0;
+    vector nxt = build(t);
+    vector<int> res;
+    int n = p.size();
+    for(int i = 0; i < n; i ++){
+        while(j && p[i] != t[j]) j = nxt[j];
+        if(t[j] == p[i]) j ++;
+        if(j == t.size()) {
+            res.emplace_back(i - j + 1);
+            j = nxt[j];
+        }
+    }
+    return res;
+}
