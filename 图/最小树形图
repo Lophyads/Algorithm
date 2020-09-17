@@ -1,0 +1,86 @@
+
+// Problem : P4716 【模板】最小树形图
+// Contest : Luogu
+// URL : https://www.luogu.com.cn/problem/P4716
+// Memory Limit : 250 MB
+// Time Limit : 1000 ms
+// Powered by CP Editor (https://github.com/cpeditor/cpeditor)
+#include<bits/stdc++.h>
+using namespace std;
+#define _rep(i, x, y) for(int i = (int)x; i < (int)y; ++i)
+#define _dep(i,x,y) for(int i = (int)x; i > (int)y; i--)
+#define PII pair<int,int>
+#define eb emplace_back
+#define pb push_back
+#define fi first
+#define se second
+#define PQ priority_queue
+#define lb lower_bound
+#define ub upper_bound
+typedef long long ll;
+typedef vector<int> VI;
+const int mod = 1e9 + 7;
+const int KINF = 0x3f3f3f3f;
+const int N = 1e4 + 10;
+struct edge{
+	int u, v, w;
+}e[N];
+int n, m, r;
+int solve(){
+	int vis[n + 1], fa[n + 1], id[n + 1], in[n + 1];
+	int ans = 0;
+	while(true){
+		memset(in, 63, sizeof in);
+		_rep(i, 0, m){
+			int u = e[i].u, v = e[i].v, w = e[i].w;
+			if(u != v && w < in[v]) {// 切记要判断u != v
+				in[v] = w;
+				fa[v] = u;
+			}
+		}
+		_rep(i, 1, n + 1)
+			if(i != r && in[i] == KINF) return -1;//存在孤点
+		int cnt = 0;
+		memset(id, 0, sizeof id);
+		memset(vis, 0, sizeof vis);
+		_rep(i, 1, n + 1){
+			if(i == r) continue;
+			ans += in[i];
+			int cur = i;
+			while(cur != r && vis[cur] != i && !id[cur]){
+				vis[cur] = i;
+				cur = fa[cur];
+			}//找环			
+			if(cur != r && !id[cur]){
+				id[cur] = ++ cnt;
+				for(int x = fa[cur]; x != cur; x = fa[x])
+					id[x] = cnt;
+			}
+		}
+		if(!cnt) break;
+		_rep(i, 1, n + 1) 
+			if(!id[i]) id[i] = ++cnt;
+		_rep(i, 0, m){
+			int u = e[i].u;
+			int v = e[i].v;
+			e[i].u = id[u];
+			e[i].v = id[v];//缩点
+			if(e[i].u != e[i].v)
+				e[i].w -= in[v];//把两个环连起来，再把其中一个环断开
+		}
+		n = cnt;
+		r = id[r];
+	}
+	return ans;
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	cin >> n >> m >> r;
+	_rep(i, 0, m){
+		cin >> e[i].u >> e[i].v >> e[i].w;
+		if(e[i].u == e[i].v) e[i].w = KINF;
+	}
+	cout << solve() << endl;
+	return 0;
+} 
+
