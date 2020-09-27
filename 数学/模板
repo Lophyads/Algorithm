@@ -41,3 +41,9 @@ ll get_euler(ll x){//欧拉函数
     if(x > 1) ans = ans / x * (x - 1);
     return ans;
 }
+int c(int n, int k, int mod){//求大组合数
+    _rep(i, 0, n + 1) fac[i] = i ? fac[i - 1] * i % mod : 1;
+	_rep(i, 1, n + 1) inv[i] = i == 1 ? 1 : (mod - mod / i) * inv[mod % i] % mod;//求i的乘法逆元
+	_rep(i, 0, n + 1) inv[i] = i ? inv[i - 1] * inv[i] % mod : 1;//求i! 的乘法逆元
+    return fac[n] * inv[k] % mod * inv[n - k] % mod;
+}
