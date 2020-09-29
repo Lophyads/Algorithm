@@ -1,0 +1,89 @@
+#include<bits/stdc++.h>
+using namespace std;
+#define _rep(i, x, y) for(int i = (int)x; i < (int)y; ++i)
+#define _dep(i,x,y) for(int i = (int)x; i > (int)y; i--)
+#define PII pair<int,int>
+#define eb emplace_back
+#define pb push_back
+#define fi first
+#define se second
+#define PQ priority_queue
+#define lb lower_bound
+#define ub upper_bound
+typedef long long ll;
+typedef vector<int> VI;
+const int mod = 1e9 + 7;
+const int KINF = 0x3f3f3f3f;
+const double eps = 1e-7;
+const int N = 1e4 + 10, M = 1e5 + 10;
+int n, m, S, T;
+int cur[M], d[N << 1];
+struct edge{
+    int u, v, flow;
+    edge(int u, int v, int f) : u(u), v(v), flow(f){}
+};
+vector<edge> edges;
+vector<int> g[N << 1];
+void add(int u, int v, ll c){
+    edges.eb(edge(u, v, c));
+    edges.eb(edge(v, u, 0));//反向边流量为0
+    int m = edges.size();
+    g[u].eb(m - 2);
+    g[v].eb(m - 1);
+}
+bool bfs(){//构造层次网络
+    memset(d, -1, sizeof d);
+    d[S] = 0;
+    queue<int> q;
+    q.push(S);
+    while(!q.empty()){
+        int u = q.front(); q.pop();
+        for(auto& nxt : g[u]){
+           edge e = edges[nxt];
+           int v = e.v, f = e.flow;
+           if(d[v] == -1 && f > 0){//下一个点可以被扩展
+               d[v] = d[u] + 1;
+               q.push(v);
+               if(v == T) return true;
+           }
+        }
+    }
+    return false;//没有从源点到汇点的路径
+}
+ll dfs(int u, int curflow){//找增广路并建新图
+    if(u == T) return curflow;
+    int tot = 0;//从当前点可以增广多少流量
+    for(int& i = cur[u]; i < (int)g[u].size(); i ++){//通过引用改变cur数组的值(弧优化)
+    	int idx = g[u][i];//边的编号
+        edge e = edges[idx];        
+        int v = e.v;
+        if(d[v] == d[u] + 1 && e.flow){//可行流
+            int f = dfs(v, min(e.flow, curflow));//v点向下流出的最大流
+            if(f == 0) continue;
+            edges[idx].flow -= f; edges[idx ^ 1].flow += f;//增广
+            tot += f;
+            curflow -= f;
+            if(curflow == 0) break;//无剩余流量
+        }
+    }
+    return tot;
+}
+void Dinic(){
+    int ans = 0;
+    while(bfs()){
+        memset(cur, 0, sizeof cur);
+        ans += dfs(S, KINF);
+    }
+    cout << ans << endl;
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	cin >> n >> m >> S >> T;
+	_rep(i, 0, m){
+	    int u, v, c;
+	    cin >> u >> v >> c;
+	    add(u, v, c);
+	}
+	Dinic();
+	return 0;
+} 
