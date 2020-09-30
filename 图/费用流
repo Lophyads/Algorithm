@@ -1,0 +1,97 @@
+#include<bits/stdc++.h>
+using namespace std;
+#define _rep(i, x, y) for(int i = (int)x; i < (int)y; ++i)
+#define _dep(i,x,y) for(int i = (int)x; i > (int)y; i--)
+#define PII pair<int,int>
+#define eb emplace_back
+#define pb push_back
+#define fi first
+#define se second
+#define PQ priority_queue
+#define lb lower_bound
+#define ub upper_bound
+typedef long long ll;
+typedef vector<int> VI;
+const int mod = 1e9 + 7;
+const int KINF = 0x3f3f3f3f;
+const double eps = 1e-7;
+const int N = 5e3 + 10, M = 5e4 + 10;
+struct edge{
+	int u, v, flow, cost;
+	edge(int u, int v, int w, int c) : u(u), v(v), flow(w), cost(c){}
+};
+vector<int> g[N << 1];
+int d[N], cur[N], ans;
+bool vis[N];
+vector<edge> edges;
+void add(int u, int v, int w, int c){
+	edges.eb(edge(u, v, w, c));
+	edges.eb(edge(v, u, 0, -c));
+	int m = edges.size();
+	g[u].eb(m - 2);
+	g[v].eb(m - 1);
+}
+bool spfa(int s, int t){
+	memset(d, 0x3f, sizeof d);
+	memset(vis, false, sizeof vis);
+	memset(cur, 0, sizeof cur);
+	queue<int> q;
+	q.push(s);
+	d[s] = 0;
+	vis[s] = true;
+	while(!q.empty()){
+		int u = q.front(); q.pop();
+		vis[u] = false;
+		for(int i = 0; i < (int)g[u].size(); i ++){
+			int idx = g[u][i];//边的编号;
+			edge e = edges[idx];
+			if(d[e.v] > d[u] + e.cost && e.flow){
+				d[e.v] = d[u] + e.cost;
+				if(!vis[e.v]){
+					q.push(e.v);
+					vis[e.v] = true;
+				}
+			}
+		}
+	}
+	return d[t] != KINF;
+}
+int dfs(int u, int t, int curflow){
+	if(u == t) return curflow;
+	vis[u] = 1;
+	int tot = 0;
+	for(int& i = cur[u]; i < (int)g[u].size(); i ++){
+		int idx = g[u][i];//边的编号;
+		edge e = edges[idx];
+		int f;
+		if(!vis[e.v] && e.flow && d[e.v] == d[u] + e.cost){
+			f = dfs(e.v, t, min(e.flow, curflow));
+			if(!f) continue;
+			ans += f * e.cost, curflow -= f;
+			edges[idx].flow -= f, edges[idx ^ 1].flow += f;
+			tot += f; 
+			if(curflow <= 0) break;
+		}
+	}
+	vis[u] = 0;
+	return tot;
+}
+int mcmf(int s, int t){
+	int ans = 0;
+	while(spfa(s, t))
+		ans += dfs(s, t, KINF);
+	return ans;
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	int n, m, s, t;
+	cin >> n >> m >> s >> t;
+	while(m --){
+		int u, v, w, c;
+		cin >> u >> v >> w >> c;
+		add(u, v, w, c);
+	}
+	int res = mcmf(s, t);
+	cout << res << " " << ans << endl;
+} 
+
