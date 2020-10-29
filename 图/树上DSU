@@ -1,0 +1,157 @@
+// AcWing 353. 雨天的尾巴
+#pragma GCC optimize("Ofast")
+#pragma GCC target("avx,avx2,fma")
+#include<bits/stdc++.h>
+using namespace std;
+#define _rep(i, x, y) for(int i = (int)x; i < (int)y; ++i)
+#define _dep(i,x,y) for(int i = (int)x; i > (int)y; i--)
+#define PII pair<int,int>
+#define eb emplace_back
+#define pb push_back
+#define fi first
+#define se second
+#define PQ priority_queue
+#define lb lower_bound
+#define ub upper_bound
+#define LC (id << 1)
+#define RC (id << 1 | 1)
+typedef long long ll;
+typedef vector<int> VI;
+const int mod = 1e9 + 7;
+const int KINF = 0x3f3f3f3f;
+const double eps = 1e-7;
+constexpr int N = 1e5 + 9;
+struct query{
+	int u, v, z;
+}q[N];
+VI g[N];
+vector<PII> node[N];
+int tmp[N], tot;
+int fa[N][20], d[N];
+int maxi[N << 2], cnt[N << 2];// 全局线段树
+// maxi 记录放置最多的物品是哪种, cnt 记录每种物品的数量
+int ans[N];
+void pushup(int id){
+	if(cnt[maxi[LC]] >= cnt[maxi[RC]]) maxi[id] = maxi[LC];
+	else maxi[id] = maxi[RC];
+}
+void build(int id, int l, int r){
+	if(l == r) maxi[id] = l;
+	else{
+		int mid = (l + r) >> 1;
+		build(LC, l, mid);
+		build(RC, mid + 1, r);
+		pushup(id);
+	}
+}
+void update(int id, int l, int r, int pos, int val){
+	if(l == r) cnt[l] += val, maxi[id] = l;
+	else{
+		int mid = (l + r) >> 1;
+		if(pos <= mid) update(LC, l, mid, pos, val);
+		else update(RC, mid + 1, r, pos, val);
+		pushup(id);
+	}
+}
+void bfs(){// 倍增求每个节点的祖先节点
+	queue<int> q;
+	q.push(1);
+	d[1] = 1;
+	while(!q.empty()){
+		int u = q.front(); q.pop();
+		for(int& v : g[u]){
+			if(d[v]) continue;
+			d[v] = d[u] + 1;
+			fa[v][0] = u;
+			for(int i = 1; (1 << i) <= d[v]; i ++)
+				fa[v][i] = fa[fa[v][i - 1]][i - 1];	
+			q.push(v);	
+		}
+	}
+}
+int LCA(int x, int y){// 求节点x 和节点y 的最近公共祖先
+	if(d[x] < d[y]) swap(x, y);
+	int t = (int)(log(d[x] + 1) / log(2)) + 1;
+	for(int i = t; i >= 0; i --){
+		if(d[fa[x][i]] >= d[y]) x = fa[x][i];
+		if(x == y) return x;
+	}
+	t = (int)(log(d[y]) / log(2)) + 1;
+	for(int i = t; i >= 0; i --){
+		if(fa[x][i] != fa[y][i]) 
+			x = fa[x][i], y = fa[y][i];
+	}
+	return fa[x][0];
+}
+int son[N];// 记录重儿子
+int sz[N];// 子树的大小
+void dfs2(int u){// 求重儿子
+	sz[u] = 1;
+	for(int& v : g[u]){
+		if(v == fa[u][0]) continue;
+		dfs2(v);
+		sz[u] += sz[v];
+		if(sz[v] > sz[son[u]]) son[u] = v;
+	}
+}
+void dfs4(int u, int sign){
+	for(auto& [pos, val] :node[u])
+		update(1, 1, tot, pos, val * sign);
+	for(int& v : g[u]){
+		if(v == fa[u][0]) continue;
+		dfs4(v, sign);
+	}
+}
+void dfs3(int u, bool keep){// keep 标志是否保留该子树的信息
+	for(int& v : g[u]){
+		if(v == fa[u][0]) continue;
+		if(v == son[u]) continue;
+		dfs3(v, false);
+	}
+	if(son[u])
+		dfs3(son[u], true);
+	for(int& v : g[u]){
+		if(v == fa[u][0]) continue;
+		if(v == son[u]) continue;
+		dfs4(v, 1);// 恢复子树信息
+	}
+	for(auto& [pos, val] : node[u]) 
+		update(1, 1, tot, pos, val);
+	ans[u] = cnt[maxi[1]] ? tmp[maxi[1]] : 0;
+	if(!keep){
+		dfs4(u, -1);// 删除信息
+		//assert(cnt[maxi[1]] == 0);// 必须加上这句否则会tle
+	}
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	int n, m;
+	cin >> n >> m;
+	_rep(i, 1, n){
+		int a, b;
+		cin >> a >> b;
+		g[a].eb(b);
+		g[b].eb(a);
+	}
+	bfs();
+	_rep(i, 0, m){
+		cin >> q[i].u >> q[i].v >> q[i].z;
+		tmp[++tot] = q[i].z;
+	}
+	sort(tmp + 1, tmp + tot + 1);
+	tot = unique(tmp + 1, tmp + tot + 1) - (tmp + 1);
+	build(1, 1, tot);
+	_rep(i, 0, m){
+		q[i].z = lb(tmp + 1, tmp + 1 + tot, q[i].z) - tmp;
+		int lca = LCA(q[i].u, q[i].v);
+		// 树上差分
+		node[q[i].u].eb(q[i].z, 1);
+		node[q[i].v].eb(q[i].z, 1);
+		node[lca].eb(q[i].z, -1);
+		node[fa[lca][0]].eb(q[i].z, -1);
+	}
+	dfs2(1);
+	dfs3(1, true);
+	for(int i = 1; i <= n; i ++) cout << ans[i] << endl;
+	return 0;
+} 
