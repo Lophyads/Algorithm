@@ -1,14 +1,26 @@
 int gcd(int a, int b){
     return b ? gcd(b, a % b) : a;
 }
+int exgcd(int a, int b, int& x, int& y){// ax + by = gcd(a, b)
+    if(!b){
+        x = 1, y = 0;
+        return a;
+    }
+    int ans = exgcd(b, a % b, x, y);
+    int t = x;
+    x = y;
+    y = t - (a / b) * y;
+    return ans;//返回最大公约数
+    // x 和 y 是 ax + by = gcd(a, b) 的一组解
+}
 void get_prim(int num){//线性筛素数
     cnt = 0;
     memset(v, 0, sizeof v);
     for(int i = 2; i <= num; i++){
         if(!v[i]) prim[cnt++] = i;
         for(int j = 0; j < cnt; j++){
-            if(prim[j] > v[i] || prim[j] > num / i) break;
-            v[prim[j] * i] = prim[j];
+            v[prim[j] * i] = prim[j]; // if(!v[i]) i 为质数
+            if(prim[j] > v[i] || prim[j] > num / i) break;       
         }
     }
 }
