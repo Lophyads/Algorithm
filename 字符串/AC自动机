@@ -15,7 +15,7 @@ void build(){//构造AC自动机
 	queue<int> q;
 	int u = 0;
 	_rep(i, 0, 26)
-		if(tr[u][i]) q.push(tr[u][i]);
+		if(tr[u][i]) q.push(tr[u][i]);// 把根节点的儿子入队而不是把根节点本身入队能避免根节点儿子的fail指针标记为本身
 	while(!q.empty()){
 		u =  q.front();
 		q.pop();
