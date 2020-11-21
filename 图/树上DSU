@@ -155,3 +155,71 @@ int main(){
 	for(int i = 1; i <= n; i ++) cout << ans[i] << endl;
 	return 0;
 } 
+/*
+ccpc 长春F
+*/
+
+
+constexpr int N = 1e5 + 10, M = N + 1e6 + 10;
+int a[N], cnt[M][20][2];
+vector<int> g[N];
+int sz[N], son[N];
+ll ans;
+int nowson;
+void dfs(int u, int fa){//处理重儿子
+	sz[u] = 1;
+	for(int& v : g[u])
+		if(v != fa){
+			dfs(v, u);
+			sz[u] += sz[v];
+			if(sz[v] > sz[son[u]]) son[u] = v;
+		}
+}
+void update(int u, int x){
+	_rep(i, 0, 20)
+		cnt[a[u]][i][(u >> i) & 1] += x;
+}
+void dfs4(int u, int fa, int sign){//修改子树信息
+	update(u, sign);
+	for(int& v : g[u])
+		if(v != fa && v != nowson)
+			dfs4(v, u, sign);
+}
+void calc(int u, int fa, int lca){// 统计答案
+	int s = (a[u] ^ lca);
+	_rep(i, 0, 20) ans += 1ll * cnt[s][i][!((u >> i) & 1)] * (1ll << i);
+	for(int& v : g[u])
+		if(v != fa && v != nowson){
+			calc(v, u, lca);
+		}
+}
+void dfs3(int u, int fa, bool keep){
+	for(int& v : g[u])
+		if(v != fa && v != son[u])
+			dfs3(v, u, false);
+	if(son[u]) dfs3(son[u], u, true), nowson = son[u];//必须标记当前重儿子
+	update(u, 1);
+	for(int& v : g[u])
+		if(v != fa && v != nowson){
+			calc(v, u, a[u]);
+			dfs4(v, u, 1);
+		}
+	if(son[u]) nowson = 0;
+	if(!keep) dfs4(u, fa, -1);
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(0);
+	int n;
+	cin >> n;
+	_rep(i, 1, n + 1) cin >> a[i];
+	_rep(i, 1, n){
+		int u, v;
+		cin >> u >> v;
+		g[u].eb(v);
+		g[v].eb(u);
+	}
+	dfs(1, 0);
+	dfs3(1, 0, true);
+	cout << ans << endl;
+	return 0;
+} 

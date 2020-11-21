@@ -14,13 +14,14 @@ int exgcd(int a, int b, int& x, int& y){// ax + by = gcd(a, b)
     // x 和 y 是 ax + by = gcd(a, b) 的一组解
 }
 void get_prim(int num){//线性筛素数
-    cnt = 0;
-    memset(v, 0, sizeof v);
-    for(int i = 2; i <= num; i++){
-        if(!v[i]) prim[cnt++] = i;
-        for(int j = 0; j < cnt; j++){
-            v[prim[j] * i] = prim[j]; // if(!v[i]) i 为质数
-            if(prim[j] > v[i] || prim[j] > num / i) break;       
+    vector<int> prim;
+	//memset(v, 0, sizeof v);
+    for(int i = 2; i <= N; i++){
+        if(!v[i]) prim.eb(i);
+        for(int& p : prim){   	
+        	if(p * i > N) break;
+            v[p * i] = 1; // if(!v[i]) i 为质数  
+            if(i % p == 0 ) break; 
         }
     }
 }
