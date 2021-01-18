@@ -10,88 +10,110 @@ using namespace std;
 #define PQ priority_queue
 #define lb lower_bound
 #define ub upper_bound
+#define all(x) (x).begin(), (x).end()
 typedef long long ll;
 typedef vector<int> VI;
-const int mod = 1e9 + 7;
-const int KINF = 0x3f3f3f3f;
-const double eps = 1e-7;
-const int N = 5e3 + 10, M = 5e4 + 10;
-struct edge{
-	int u, v, flow, cost;
-	edge(int u, int v, int w, int c) : u(u), v(v), flow(w), cost(c){}
-};
-vector<int> g[N << 1];
-int d[N], cur[N], ans;
-bool vis[N];
-vector<edge> edges;
-void add(int u, int v, int w, int c){
-	edges.eb(edge(u, v, w, c));
-	edges.eb(edge(v, u, 0, -c));
-	int m = edges.size();
-	g[u].eb(m - 2);
-	g[v].eb(m - 1);
-}
-bool spfa(int s, int t){
-	memset(d, 0x3f, sizeof d);
-	memset(vis, false, sizeof vis);
-	memset(cur, 0, sizeof cur);
-	queue<int> q;
-	q.push(s);
-	d[s] = 0;
-	vis[s] = true;
-	while(!q.empty()){
-		int u = q.front(); q.pop();
-		vis[u] = false;
-		for(int i = 0; i < (int)g[u].size(); i ++){
-			int idx = g[u][i];//边的编号;
-			edge e = edges[idx];
-			if(d[e.v] > d[u] + e.cost && e.flow){
-				d[e.v] = d[u] + e.cost;
-				if(!vis[e.v]){
-					q.push(e.v);
-					vis[e.v] = true;
+typedef vector<VI> VII;
+typedef vector<ll> VL;
+typedef vector<vector<ll>> VLL;
+constexpr int mod = 1e9 + 7;
+constexpr int KINF = 0x3f3f3f3f;
+constexpr double eps = 1e-7;
+namespace MCMF{
+	int N, S, T;
+	VII g;
+	struct edge{
+		int v;
+		ll w, c;
+		edge(int v, ll w, ll c) : v(v), w(w), c(c){}
+	};
+	vector<edge> e;
+	void init(int n){
+		N = n;
+		g = VII(N);
+		e.clear();
+	}
+	void add(int u, int v, int w, int c){
+		g[u].eb(e.size());
+		e.eb(v, w, c);
+		g[v].eb(e.size());
+		e.eb(u, 0, -c);
+	}
+	VI vis;
+	VL d;
+	bool spfa(){
+		vis.assign(N, 0);
+		d.assign(N, KINF);
+		queue<int> q;
+		q.push(S);
+		d[S] = 0;
+		vis[S] = 1;
+		while(!q.empty()){
+			int u = q.front();
+			vis[u] = 0;
+			q.pop();
+			for(int& id : g[u]){
+				auto E = e[id];
+				int v = E.v;
+				ll w = E.w, c = E.c;			
+				if(w && d[v] > d[u] + c){
+					d[v] = d[u] + c; 
+					if(vis[v]) continue;
+					q.push(v);
+					vis[v] = 1;
 				}
 			}
 		}
+		return d[T] != KINF;
 	}
-	return d[t] != KINF;
-}
-int dfs(int u, int t, int curflow){
-	if(u == t) return curflow;
-	vis[u] = 1;
-	int tot = 0;
-	for(int& i = cur[u]; i < (int)g[u].size(); i ++){
-		int idx = g[u][i];//边的编号;
-		edge e = edges[idx];
-		int f;
-		if(!vis[e.v] && e.flow && d[e.v] == d[u] + e.cost){
-			f = dfs(e.v, t, min(e.flow, curflow));
+	VI cur;
+	ll cost = 0;//费用
+	ll dinic(int u, ll lim){
+		if(u == T || !lim) return lim;
+		vis[u] = 1;// 防止因费用为0的边导致死循环
+		ll tot = 0;
+		for(int& i = cur[u]; i < (int)g[u].size(); ++i){
+			int id = g[u][i];
+			auto E = e[id];
+			int v = E.v;
+			ll w = E.w, c = E.c;
+			if(!w || d[v] != d[u] + c || vis[v]) continue;
+			ll f = dinic(v, min(lim, w));
 			if(!f) continue;
-			ans += f * e.cost, curflow -= f;
-			edges[idx].flow -= f, edges[idx ^ 1].flow += f;
-			tot += f; 
-			if(curflow <= 0) break;
+			cost += f * c;
+			e[id].w -= f;
+			e[id ^ 1].w += f;
+			tot += f;
+			lim -= f;
+			if(!lim) break;
 		}
+		vis[u] = 0;
+		return tot;
 	}
-	vis[u] = 0;
-	return tot;
-}
-int mcmf(int s, int t){
-	int ans = 0;
-	while(spfa(s, t))
-		ans += dfs(s, t, KINF);
-	return ans;
+	pair<ll,ll> mcmf(int s, int t){
+		S = s, T = t;
+		ll flow = 0;//最大流
+		while(spfa()){
+			cur.assign(N, 0);
+			vis.assign(N, 0);
+			flow += dinic(s, KINF);
+		}
+		return {flow, cost};
+	}
 }
 int main(){
 	ios::sync_with_stdio(false); cin.tie(0);
 	int n, m, s, t;
 	cin >> n >> m >> s >> t;
+	MCMF::init(n);
 	while(m --){
 		int u, v, w, c;
 		cin >> u >> v >> w >> c;
-		add(u, v, w, c);
+		MCMF::add(u - 1, v - 1, w, c);
 	}
-	int res = mcmf(s, t);
-	cout << res << " " << ans << endl;
+	auto [a, b] = MCMF::mcmf(s - 1, t - 1);
+	cout << a << " " << b << endl;
+	return 0;
 } 
-
+// 注意int转long long会溢出
+// dp记得处理非法状态

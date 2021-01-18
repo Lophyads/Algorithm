@@ -1,67 +1,69 @@
-/*struct Flow{
-	struct edge{
-		int u, v, f;
-		edge(int u, int v, int f) : u(u), v(v), f(f){}
-	};
+/*namespace Flow{
 	int N, S, T;
-	vector<VI> g;
-	vector<edge> edges;
-	Flow(int n, int s, int t) : N(n), S(s), T(t), g(n){}
-	void add(int u, int v, ll flow){
-		edges.eb(edge(u, v, flow));
-		edges.eb(edge(v, u, 0));
-		int m = edges.size();
-		g[u].eb(m - 2);
-		g[v].eb(m - 1);
+	vector<pair<int,ll>> e;
+	VII g;
+	void init(int n){
+		N = n;
+		g = VII(N);
+		e.clear();
+	}
+	void add(int u, int v, int w){
+		e.eb(v, w);
+		e.eb(u, 0);
+		int sz = e.size();
+		g[u].eb(sz - 2);
+		g[v].eb(sz - 1);
 	}
 	VI d;
-	bool Bfs(){//分层
-		d.assign(N, -1);
-		d[S] = 0;
+	bool bfs(){
+		d.assign(N, 0);
+		d[S] = 1;
 		queue<int> q;
 		q.push(S);
 		while(!q.empty()){
 			int u = q.front();
 			q.pop();
 			for(int& id : g[u]){
-				edge e = edges[id];
-				if(d[e.v] == -1 && e.f > 0){
-					d[e.v] = d[u] + 1;
-					if(e.v == T) return true;
-					q.push(e.v);
-				}
+				auto& [v, w] = e[id];
+				if(!w || d[v]) continue;
+				d[v] = d[u] + 1;
+				if(v == T) return true;
+				q.push(v);
 			}
 		}
 		return false;
 	}
 	VI cur;
-	int Dinic(int u, int limit){
-		if(u == T) return limit;
-		int tot = 0;
-		for(int& i = cur[u]; i < (int)g[u].size(); i ++){
+	ll dinic(int u, ll lim){
+		if(u == T || !lim) return lim;
+		ll tot = 0;
+		for(int& i = cur[u]; i < (int)g[u].size(); ++i){
 			int id = g[u][i];
-			edge e = edges[id];
-			if(d[e.v] == d[u] + 1 && e.f > 0){
-				int flow = Dinic(e.v, min(limit, e.f));
-				if(!flow) continue;
-				tot += flow;
-				limit -= flow;
-				edges[id].f -= flow;
-				edges[id ^ 1].f += flow;
-				if(!limit) return tot;
+			auto& [v, w] = e[id];
+			if(!w || d[v] != d[u] + 1) continue;
+			ll f = dinic(v, min(w, lim));
+			if(!f){
+				d[v] = 0;
+				continue;
 			}
+			e[id].se -= f;
+			e[id ^ 1].se += f;
+			tot += f;
+			lim -= f;
+			if(!lim) break;
 		}
 		return tot;
 	}
-	ll MaxFlow(){
-		ll ans = 0;
-		while(Bfs()){
+	ll maxflow(int s, int t){
+		S = s, T = t;
+		ll ans = 0, f;
+		while(bfs()){
 			cur.assign(N, 0);
-			ans += Dinic(S, KINF);
+			while(f = dinic(S, KINF)) ans += f;
 		}
 		return ans;
 	}
-};*/
+}*/
 #include<bits/stdc++.h>
 using namespace std;
 #define _rep(i, x, y) for(int i = (int)x; i < (int)y; ++i)
