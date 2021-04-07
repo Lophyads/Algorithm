@@ -1,0 +1,123 @@
+template<typename T> inline void read(T& x){
+	T ret = 0, sgn = 1;
+	char c = getchar();
+	while(!isdigit(c)) sgn = (c == '-' ? -1 : 1), c = getchar();
+	while(isdigit(c)) ret = (ret << 3) + (ret << 1) + c - '0', c = getchar();
+	x = (sgn == -1 ? -ret : ret);
+}
+template<class T> inline void write(T x){  
+	int num;
+    char chr[21];  
+    if(x==0){
+    	putchar('0');
+    	return;
+    }
+    if(x<0)x*=-1,putchar('-');
+    num=0;
+    while(x) chr[++num]=(x%10)+48,x/=10;
+    while(num) putchar(chr[num--]);
+    return ;
+}
+//
+struct control{
+	int ct,val;
+	control(int Ct,int Val=-1):ct(Ct),val(Val){}
+	inline control operator()(int Val){
+		return control(ct,Val);
+	}
+}_endl(0),_prs(1),_setprecision(2);
+struct FastIO{
+	#define IOSIZE 1000000
+	char in[IOSIZE],*p,*pp,out[IOSIZE],*q,*qq,ch[20],*t,b,K,prs;
+	FastIO():p(in),pp(in),q(out),qq(out+IOSIZE),t(ch),b(1),K(6){}
+	~FastIO(){fwrite(out,1,q-out,stdout);}
+	inline char getch(){
+		return p==pp&&(pp=(p=in)+fread(in,1,IOSIZE,stdin),p==pp)?b=0,EOF:*p++;
+	}
+	inline void putch(char x){
+		q==qq&&(fwrite(out,1,q-out,stdout),q=out),*q++=x;
+	}
+	inline void puts(const char str[]){fwrite(out,1,q-out,stdout),fwrite(str,1,strlen(str),stdout),q=out;}
+	inline void getline(string& s){
+		s="";
+		for(char ch;(ch=getch())!='\n'&&b;)s+=ch;
+	}
+	#define indef(T) inline FastIO& operator>>(T& x){\
+		x=0;char f=0,ch;\
+		while(!isdigit(ch=getch())&&b)f|=ch=='-';\
+		while(isdigit(ch))x=(x<<1)+(x<<3)+(ch^48),ch=getch();\
+		return x=f?-x:x,*this;\
+	}
+	indef(int)
+	indef(long long)
+	inline FastIO& operator>>(char& ch){return ch=getch(),*this;}
+	inline FastIO& operator>>(string& s){
+		s=""; char ch;
+		while(isspace(ch=getch())&&b);
+		while(!isspace(ch)&&b)s+=ch,ch=getch();
+		return *this;
+	}
+	inline FastIO& operator>>(double& x){
+		x=0;char f=0,ch;
+        double d=0.1;
+        while(!isdigit(ch=getch())&&b)f|=(ch=='-');
+        while(isdigit(ch))x=x*10+(ch^48),ch=getch();
+        if(ch=='.')while(isdigit(ch=getch()))x+=d*(ch^48),d*=0.1;
+        return x=f?-x:x,*this;
+	}
+	#define outdef(_T) inline FastIO& operator<<(_T x){\
+		!x&&(putch('0'),0),x<0&&(putch('-'),x=-x);\
+		while(x)*t++=x%10+48,x/=10;\
+		while(t!=ch)*q++=*--t;\
+		return *this;\
+	}
+	outdef(int)
+	outdef(long long)
+	inline FastIO& operator<<(char ch){return putch(ch),*this;}
+	inline FastIO& operator<<(const char str[]){return puts(str),*this;}
+	inline FastIO& operator<<(const string& s){return puts(s.c_str()),*this;}
+	inline FastIO& operator<<(double x){
+		int k=0;
+		this->operator<<(int(x));
+		putch('.');
+		x-=int(x);
+		prs&&(x+=5*pow(10,-K-1));
+		while(k<K)putch(int(x*=10)^48),x-=int(x),++k;
+		return *this;
+	}
+	inline void operator<<(const control& cl){
+		switch(cl.ct){
+			case 0:putch('\n');break;
+			case 1:prs=cl.val;break;
+			case 2:K=cl.val;break;
+		}
+	}
+	inline operator bool(){return b;}
+}io;
+· 输入输出
+
+char ch;int a;long long d;string s1,s2;double aa,bb;
+io>>ch>>a>>d>>s1>>aa>>bb,io<<ch<<a<<d<<s1<<aa<<bb;
+io.getline(s2),io<<s2,io.puts("123"),io<<"456";
+//<<输出操作不能与>>输入操作连在一起!
+· 判断EOF（使用重载类型转换运算符实现）
+
+while(io>>ch)io<<ch;//判断方法与cin类似。
+if(io)...
+· 控制类型的使用
+
+io<<_endl;//换行
+io<<_prs(true);//从现在开始，一律选择进行四舍五入
+io<<_prs(false);//从现在开始，一律不进行四舍五入
+io<<_setprecision(k);//从现在开始，一律保留k位小数
+//注意：控制类型仅为方便习惯于iostream的用户来使用，平时尽量不要用，否则会对效率进行影响。
+· 其他
+
+//那个模板中，可以把不要的重载运算符删掉，比如只需要输入输出整数，就把输入输出字符串之类的删掉。
+//如果需要别的实现，请以getch和putch代替getchar和putchar，然后自行实现。
+//以下几个函数/变量千万不能删掉：
+//FastIO,~FastIO,getch,putch,in,out,p,pp,q,qq
+//有时编译时可能会有警告，不用担心，可放心使用。
+//警告原因：
+//1.输出C风格字符串的函数参数是const类型，输出字符串变量时会警告。
+//2.为了常数优化，部分int换成了char，某些编译器会进行警告。

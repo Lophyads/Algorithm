@@ -1,0 +1,56 @@
+struct linearbasis{
+	int N, zero;
+	VL p, b;
+	linearbasis(){
+		N = 64;
+		p.assign(N, 0ll);
+		zero = 0;
+	}
+	void insert(ll x){
+		_dep(i, N - 1, -1){
+			if(x >> i & 1){
+				if(!p[i]) {
+					p[i] = x;
+					return;
+				}
+				x ^= p[i];
+			}			
+		}
+		zero = 1;
+	}
+	ll get_mx(){
+		ll ans = 0;
+		_dep(i, N - 1, -1)
+			if((ans ^ p[i]) > ans) ans ^= p[i];
+		return ans;
+	}
+	ll get_mi(){
+		ll ans = 0;
+		_rep(i, 0, N)
+			if(p[i]){
+				ans = p[i];
+				break;
+			}
+		return ans;
+	}
+	void rebuild(){
+		_rep(i, 0, N){
+			if(!p[i]) continue;
+			_rep(j, 0, i){
+				if(p[i] >> j & 1) p[i] ^= p[j];
+			}
+			if(p[i]) b.eb(p[i]);
+		}
+	}
+	ll query(ll k){// 查询第k小
+		k -= zero;
+		if(!k) return 0;
+		int sz = b.size();
+		if(k > (1ll << sz) - 1) return -1;
+		ll ans = 0;
+		_rep(i, 0, sz)
+			if(k >> i & 1) ans ^= b[i];
+		return ans;
+	}
+};
+
