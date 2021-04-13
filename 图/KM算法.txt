@@ -1,0 +1,36 @@
+	auto km = [&](){
+		auto bfs = [&](int x){
+			int cur = 0, nxt = 0;
+			match[cur] = x;
+			while(1){
+				ll del = KINF;
+				x = match[cur];
+				vis[cur] = 1;
+				_rep(i, 1, n + 1){
+					if(vis[i]) continue;
+					ll tmp = lx[x] + ly[i] - w[x][i];
+					if(tmp < slack[i]) slack[i] = tmp, pre[i] = cur;
+					if(slack[i] < del) del = slack[i], nxt = i;
+				}
+				_rep(i, 0, n + 1){
+					if(vis[i]) lx[match[i]] -= del, ly[i] += del;
+					else slack[i] -= del;
+				}
+				cur = nxt;
+				if(!match[cur]) break;
+			}
+			while(cur){
+				match[cur] = match[pre[cur]];
+				cur = pre[cur];
+			}
+		};
+		ll sum = 0;
+		_rep(i, 1, n + 1) {
+			bfs(i);
+			memset(vis, 0, sizeof vis);
+			memset(pre, 0, sizeof pre);
+			memset(slack, 0x3f, sizeof slack);
+		}
+		_rep(i, 1, n + 1) sum += w[match[i]][i];
+		return sum;
+	};

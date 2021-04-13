@@ -26,3 +26,47 @@ int main(){
     return 0;
 }
 
+	auto Hopcroft_Karp = [&](){// 复杂度sqrt(V) * E , dinic 复杂度为 sqrt(E) * V, 传统匈牙利为 n * e + m
+		VI d(n + 1), lx(n + 1), ly(m + 1);
+		auto bfs = [&](){
+			queue<int> q;
+			_rep(i, 1, n + 1){// 加入未匹配点
+				if(!lx[i]){
+					d[i] = 0;
+					q.push(i);
+				}
+				else d[i] = KINF;
+			}
+			d[0] = KINF;// 0号节点为虚拟节点
+			while(!q.empty()){
+				int u = q.front();
+				q.pop();
+				if(d[u] < d[0]){
+					for(int& v : g[u]){
+						if(d[ly[v]] == KINF){
+							d[ly[v]] = d[u] + 1;
+							q.push(ly[v]);// 注意这里加入的是左部点而不是右部点
+						}
+					}
+				}
+			}
+			return d[0] != KINF;
+		};
+		auto dfs = [&](auto&& dfs, int u) -> bool{
+			if(!u) return true;
+			for(int& v : g[u]){
+				if(d[ly[v]] == d[u] + 1 && dfs(dfs, ly[v])){
+					lx[u] = v, ly[v] = u;
+					return true;
+				}
+			}
+			d[u] = KINF;
+			return false;
+		};
+		int ans = 0;
+		while(bfs()){
+			_rep(i, 1, n + 1)
+				if(!lx[i] && dfs(dfs, i)) ans ++;
+		}
+		return ans;
+	};

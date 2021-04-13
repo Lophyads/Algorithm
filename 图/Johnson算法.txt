@@ -1,0 +1,65 @@
+	int n, m;
+	cin >> n >> m;
+	VLL w(n + 1, VL(n + 1, 1e9));
+	_rep(i, 0, n + 1) w[i][i] = 0;
+	VII g(n + 1);
+	_rep(i, 0, m){
+		int u, v, c;
+		cin >> u >> v >> c;
+		if(u != v && w[u][v] == (int)1e9)g[u].eb(v);
+		w[u][v] = min(w[u][v], 0ll + c);
+	}
+	_rep(i, 1, n + 1){
+		 g[0].eb(i);// 建立虚拟节点，并向其他所有点连权为0的边
+		 w[0][i] = 0;
+	}
+	VL h(n + 1, KINF);// 求从虚拟源点出发到其他所有点的最短路,并顺便检查是否存在负环
+	auto spfa = [&](){
+		VI vis(n + 1);
+		queue<int> q;
+		q.push(0);
+		vis[0] = 1;
+		h[0] = 0;
+		while(!q.empty()){
+			int u = q.front();
+			q.pop();
+			if(vis[u] == n) return false;// 存在负环
+			vis[u] *= -1;
+			for(int& v : g[u]){
+				if(h[v] > h[u] + w[u][v]){
+					h[v] = h[u] + w[u][v];
+					if(vis[v] > 0) continue;
+					vis[v] = 1 - vis[u];
+					q.push(v);
+				}
+			}
+		}
+		return true;
+	};
+	if(!spfa()){// 存在负环
+		cout << -1 << endl;
+		return 0;
+	}
+	auto dij = [&](int s){
+		VL d(n + 1, 1e9);
+		VI vis(n + 1);
+		PQ<pair<ll,int>> pq;
+		d[s] = 0;
+		pq.emplace(0, s);		
+		ll ans = 0;
+		while(!pq.empty()){
+			auto [len, u] = pq.top();
+			pq.pop();
+			if(vis[u]) continue;
+			vis[u] = 1;
+			len *= -1;
+			for(int& v : g[u]){
+				if(d[v] > len + w[u][v] + h[u] - h[v]){// h[u] + w[u][v] >= h[v] -> w[u][v] + h[u] - h[v] >= 0
+					// 将边权改变为w[u][v] + h[u] - h[v]后就不存在负权值了
+					d[v] = len + w[u][v] + h[u] - h[v];
+					pq.emplace(-d[v], v);
+				}
+			}
+		}
+		// 最终的d[v] = d[v] - h[s] + h[v]
+	};
