@@ -343,3 +343,44 @@ int main(){
 	}
 	return 0;
 } 
+void init(){//线性筛处理约数个数 https://www.cnblogs.com/ldysy2012/p/10390857.html
+	d[1] = 1;
+	_rep(i, 2, N){
+		if(!vis[i])
+			prim.eb(i), d[i] = 2;
+		for(int& p : prim){
+			if(p * i >= N) break;
+			vis[i * p] = 1;
+			if(i % p == 0){
+				d[i * p] = 2 * d[i] - d[i / p];
+				break;
+			}
+			d[i * p] = d[i] * 2;
+		}
+	}
+}
+void get(int x){// 获得x的所有质因子
+	fact.clear();
+	for(int i = 2; 1ll * i * i <= x; i ++){
+		if(x % i == 0){
+			fact.eb(i);
+			while(x % i == 0) x /= i;
+		}
+	}
+	if(x > 1) fact.eb(x);
+}
+int calc(int l,int r, int x){// 求[l, r]与x互质的数的个数
+	int n = fact.size();
+	int res = 0;// 不互质的个数
+	for(int i = 1; i < (1 << n); i ++){// 二进制枚举因数组合
+		int tmp = 1, cnt = 0;
+		_rep(j, 0, n){
+			if((i >> j) & 1)
+				tmp *= fact[j], cnt++;
+		}
+		// 容斥原理,奇加偶减
+		if(cnt & 1) res += r / tmp - (l - 1) / tmp;
+		else res -= r / tmp - (l - 1) / tmp;
+	}
+	return r - l + 1 - res;
+}

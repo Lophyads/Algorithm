@@ -1,0 +1,45 @@
+struct point{
+	LL x, y;
+	
+};
+ 
+bool operator < (const point &A, const point &B){
+	return A.x < B.x || A.x == B.x && A.y < B.y;
+}
+point operator - (const point &A, const point &B){
+	return (point){A.x - B.x, A.y - B.y};
+}
+point operator + (const point &A, const point &B){
+	return (point){A.x + B.x, A.y + B.y};
+}
+point operator * (const point &A, const LL &B){
+	return (point){A.x * B, A.y * B};
+}
+point operator / (const point &A, const LL &B){
+	return (point){A.x / B, A.y / B};
+}
+LL cross(const point &A, const point &B){
+	return A.x * B.y - A.y * B.x;
+}
+ 
+ 
+struct segment{
+	point A, B;
+}s[maxn];
+ 
+map<point, LL> mp;
+ 
+bool intersection(segment p, segment q, point &o){
+	LL U = cross(q.A - p.A, q.B - q.A);
+	LL D = cross(p.B - p.A, q.B - q.A);
+	if(D == 0) return false;
+	if(D < 0){
+		D = -D;
+		U = -U;
+	}
+	if(U < 0 || U > D) return false;
+	o = (p.B - p.A) * U;
+	if(o.x % D || o.y % D) return false;
+	o = p.A +  o/ D;
+	return true;
+}
