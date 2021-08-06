@@ -1,0 +1,60 @@
+// F3. Lightsabers (hard)
+// wifiiiii
+constexpr int maxn = 4e5 + 7;
+const double PI = acos(-1.0);
+struct cp{
+    double x,y;
+    cp(double a=0,double b=0){x=a,y=b;}
+    inline cp operator + (cp &a) {return cp{x+a.x,y+a.y};}
+    inline cp operator - (cp &a) {return cp{x-a.x,y-a.y};}
+    inline cp operator * (cp &a) {return cp{x*a.x-y*a.y,x*a.y+y*a.x};}
+    inline void operator /= (double a) {x/=a,y/=a;}
+    inline void operator += (cp &a) {x+=a.x,y+=a.y;}
+    inline cp conj() {return cp(x,-y);}
+}w[maxn], w_inv[maxn], A[maxn],B[maxn];
+void init(int n) {for(int i=0;i<n;++i) w[i] = cp(cos(2*PI/n*i), sin(2*PI/n*i)), w_inv[i] = w[i].conj();}
+void fft(cp *a, int n, int f=0) {
+    cp *ww;if(f) ww=w;else ww=w_inv;
+    for(int i=0,j=0;i<n;++i) {
+        if(i>j) swap(a[i],a[j]);
+        for(int l=n>>1;(j^=l)<l;l>>=1);
+    }
+    for(int l=2;l<=n;l<<=1) {
+        int m=l/2;
+        for (cp *p=a;p!=a+n;p+=l) {
+            for (int i=0;i<m;++i) {
+                cp t = ww[n/l*i]*p[m+i];
+                p[m+i]=p[i]-t,p[i]+=t;
+            }
+        }
+    }
+    if(f) for(int i=0;i<n;++i) a[i]/=n;
+}
+VL mul(vector<ll>&a,vector<ll>&b) {
+    if(max(a.size(),b.size())<128) {
+        int sza=a.size(),szb=b.size(),len=sza+szb-1;
+        vector<ll> ret(len);
+        for(int i=0;i<sza;i++)
+            for(int j=0;j<szb;j++)
+                ret[i+j]+=a[i]*b[j]%mod;
+        VL res(len);
+        for(int i=0;i<len;++i) res[i]=ret[i]%mod;
+        while(len>0 && !res[len-1]) --len;
+        res.resize(len);
+        return res;
+    }
+    int m=a.size()+b.size(),len=1;for(;len<=m;len<<=1);
+    for(int i = 0;i < (int)a.size(); ++i) A[i]=a[i];
+    for(int i = 0;i < (int)b.size(); ++i) B[i]=b[i];
+    for(int i = a.size(); i <= len; ++i) A[i]=0;
+    for(int i = b.size(); i <= len; ++i) B[i]=0;
+    init(len);
+    fft(A,len);fft(B,len);
+    for(int i=0;i<len;++i) A[i]=A[i]*B[i];
+    fft(A,len,-1);
+    VL res(len);
+    for(int i=0;i<len;++i) res[i]=(ll)(A[i].x+0.5)%mod;
+    while(len>0 && !res[len-1]) --len;
+    res.resize(len);
+    return res;
+}
