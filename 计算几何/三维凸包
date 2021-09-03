@@ -117,8 +117,6 @@ struct CH3D{
 	void create(){
 		num = 0;
 		face add;
-
-		//***********************************
 		//此段是为了保证前四个点不共面
 		bool flag = true;
 		for(int i = 1;i < n;i++){
@@ -147,7 +145,6 @@ struct CH3D{
 			}
 		}
 		if(flag)return;
-		//**********************************
 
 		for(int i = 0;i < 4;i++){
 			add.a = (i+1)%4;
@@ -172,7 +169,7 @@ struct CH3D{
 	}
 	//表面积
 	//`测试：HDU3528`
-	double area(){
+	double area(){ // 得先构造凸包
 		double res = 0;
 		if(n == 3){
 			Point3 p = cross(P[0],P[1],P[2]);

@@ -1,0 +1,54 @@
+map<int,int> upper, lower; //上下凸壳
+// (x, y) 加入上凸壳, (x, -y)加入下凸壳
+ll cross(ll x1, ll y1, ll x2, ll y2, ll x3, ll y3){ // 叉乘
+	ll X1 = (x2 - x1), Y1 = (y2 - y1);
+	ll X2 = (x3 - x1), Y2 = (y3 - y1);
+	return X1 * Y2 - X2 * Y1;
+}
+bool check(map<int,int>& hull, int x, int y){// 判断点是否在上凸壳下方
+	auto it = hull.lower_bound(x);
+	if(it == hull.end()) return false;
+	if(it->first == x) return it->second >= y;
+	if(it == hull.begin()) return false;
+	auto pre = prev(it);
+	return cross(pre->first, pre->second, x, y, it->first, it->second) >= 0;
+}
+void add(map<int,int>& hull, int x, int y){// 把点加入凸包
+	if(check(hull, x, y)) return ;
+	hull[x] = y;
+	auto it = hull.find(x);
+	auto ita = it;
+	it = next(it);
+	auto itb = it;
+	while(it != hull.end()){
+		itb = it;
+		it = next(it);
+		if(it == hull.end()) break;
+		if(cross(ita->first, ita->second, itb->first, itb->second, it->first, it->second) < 0) break;
+		hull.erase(itb); 
+	}
+	while(1){
+		it = ita;
+		if(it == hull.begin()) break;
+		ita = it;
+		it = prev(it);
+		if(it == hull.begin()) break;
+		itb = it;
+		it = prev(it);
+		if(cross(it->first, it->second, itb->first, itb->second, ita->first, ita->second) < 0) break;
+		hull.erase(itb);
+	}
+}
+// CF 30D. Professor's task
+	rep(i, 0, n){
+		int op, x, y;
+		cin >> op >> x >> y;
+		if(op == 1){ //加点进入凸包
+			add(upper, x, y);
+			add(lower, x, -y);
+		}
+		else{
+			if(check(upper, x, y) && check(lower, x, -y)) cout << "YES\n"; // 点在凸包内部
+			else cout << "NO\n";
+		}
+	}
