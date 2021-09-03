@@ -114,4 +114,58 @@ int main(){
 	}
 	return 0;
 } 
-
+/* 给定n个模式串,一个文本串,求各个模式串在文本串中不重叠出现的次数*/
+const int N = 4e5 + 7;
+const int M = 1e5 + 7;
+int ans[N], pre[M], pos[M];
+string ss[M];
+int tr[N][26], fail[N], idx[N], tot;
+void init(){
+    memset(tr, 0, sizeof tr);
+    memset(fail, 0, sizeof fail);
+    memset(idx, 0, sizeof idx);
+    memset(pre, 0, sizeof pre);
+    memset(pos, 0, sizeof pos);
+    memset(ans, 0, sizeof ans);
+    tot = 0;
+}
+void insert(string s, int id){
+    int u = 0;
+    for(char& c : s){
+        int t = c - 'a';
+        if(!tr[u][t]) tr[u][t] = ++tot;
+        u = tr[u][t];
+    }
+    pos[id] = u; // 重复模式串都在同一个点结尾
+    idx[u] = id;
+}
+void build(){
+    queue<int> q;
+    _rep(i, 0, 26)
+        if(tr[0][i]) q.push(tr[0][i]);
+    while(!q.empty()){
+        int u = q.front();
+        q.pop();
+        _rep(i, 0, 26){
+            if(tr[u][i]) fail[tr[u][i]] = tr[fail[u]][i], q.push(tr[u][i]);
+            else tr[u][i] = tr[fail[u]][i];
+        }
+    }
+}
+void get_ans(string s){
+    int u = 0;
+    for(int i = 0; i < (int)s.size(); i ++){
+        char c = s[i];
+        int t = c - 'a';
+        u = tr[u][t];
+        for(int j = u; j; j = fail[j]) {
+            if(idx[j]){
+                if(!pre[idx[j]] || i - (int)ss[idx[j]].size() >= pre[idx[j]]) {
+                    ans[j] ++;
+                    pre[idx[j]] = i;
+                }
+            }
+        }
+    }
+    return ;
+}
