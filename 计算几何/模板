@@ -27,7 +27,7 @@ point rotate(const point &a, const double &b){
 	return point(a.x * cos(b) - a.y * sin(b), a.x * sin(b) + a.y * cos(b));
 }
 	// 有向面积公式
-	_rep(i, 0, n) cin >> p[i].x >> p[i].y;
+	rep(i, 0, n) cin >> p[i].x >> p[i].y;
 	double sum = 0;
-	_rep(i, 1, n - 1)
+	rep(i, 1, n - 1)
 		sum += 1.0 / 2.0 * cross(p[i] - p[0], p[i + 1] - p[i]);

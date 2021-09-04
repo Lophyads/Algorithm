@@ -823,7 +823,7 @@ long double RotateCalipers(polygon& c){ // 求凸包的旋转卡壳(直径)
 	int n = c.n;
 	long double ans = 0;
 	int j = 2;
-	_rep(i, 0, n){
+	for(int i = 0; i < c.n; i ++){
 		// 枚举每条线段,j作为顶点,通过叉积求顶点到与边的三角面积来判断点到边距离的大小
 		while(cross(c.p[i], c.p[i + 1], c.p[j]) < cross(c.p[i], c.p[i + 1], c.p[j + 1])) j = (j + 1) % n;
 		ans = max(ans, max(c.p[i].dis2(c.p[j]), c.p[i + 1].dis2(c.p[j]))); // 左右端点之一到j的距离的平方
