@@ -167,3 +167,135 @@ int main(){
 	}
 	return 0;
 } 
+
+// 动态MST 
+const int N = 5e4 + 10;
+const int inf = 1e9;
+struct edge{
+	int u, v, id;
+	ll w;
+	bool operator < (const edge& rhs) const{
+		return w < rhs.w;
+	}
+}e[N], E[30][N], tmp[N], stk[N];
+int top = 0;
+struct qur{
+	int k;
+	ll d;
+}Q[N];
+int fa[N], sz[N];
+ll ans[N];
+void init(int n){
+	rep(i, 0, n) {
+		fa[tmp[i].u] = tmp[i].u, fa[tmp[i].v] = tmp[i].v;
+		sz[tmp[i].u] = sz[tmp[i].v] = 1;
+	}
+}
+int find(int x){
+	return (x == fa[x] ? x : fa[x] = find(fa[x]));
+}
+bool join(int x, int y){
+	int fx = find(x), fy = find(y);
+	if(fx == fy) return false;
+	if(sz[fx] < sz[fy]) swap(fx, fy);
+	fa[fy] = fx;
+	sz[fx] += sz[fy];
+	return true;
+}
+int W[N], deps[50], p[N];
+void contraction(int& n, ll& res){ //缩点(将已确定的mst连通块缩成一个点)
+	init(n);
+	sort(tmp, tmp + n);
+	top = 0;
+	rep(i, 0, n){
+		if(join(tmp[i].u, tmp[i].v)) stk[top++] = tmp[i];
+	}
+	// 拿出mst的边集(包含被修改的边)
+	rep(i, 0, top) {
+		fa[stk[i].u] = stk[i].u, fa[stk[i].v] = stk[i].v;
+		sz[stk[i].u] = sz[stk[i].v] = 1;
+	}
+	rep(i, 0, top){ // 添加没被修改并且在mst中的边并更新答案, 这些边未来也肯定在mst
+		if(stk[i].w > -inf) 
+			join(stk[i].u, stk[i].v), res += stk[i].w;
+	}
+	top = 0;
+	rep(i, 0, n){ // 添加未来可能在mst的边
+		int fu = find(tmp[i].u), fv = find(tmp[i].v);
+		if(fu != fv){
+			stk[top++] = tmp[i];
+			p[tmp[i].id] = top - 1;
+			// 缩点(将已确定的mst连通块缩成一个点)
+			stk[top - 1].u = find(tmp[i].u);
+			stk[top - 1].v = find(tmp[i].v);
+		}
+	}
+	n = top; // 图的规模减小到top
+	// 缩点
+	rep(i, 0, n) tmp[i] = stk[i]; 
+}
+void reducation(int& n){ // 把必不可能在mst的边删掉
+	init(n);
+	sort(tmp, tmp + n);
+	top = 0;
+	rep(i, 0, n){
+		if(join(tmp[i].u, tmp[i].v)){
+			stk[top++] = tmp[i];
+			p[tmp[i].id] = top;
+		}
+		else if(tmp[i].w >= inf) stk[top++] = tmp[i], p[tmp[i].id] = top - 1; // !!是top-1
+	}
+	n = top;
+	rep(i, 0, n) tmp[i] = stk[i];
+}
+void cdq(int l, int r, int dep, ll res){
+	if(l == r) W[Q[l].k] = Q[l].d; // 修改边权
+	int n = deps[dep], mid = (l + r) >> 1;
+	vector<edge> nw;
+	rep(i, 0, n) {
+		E[dep][i].w = W[E[dep][i].id]; 
+		// 拷贝一份
+		tmp[i] = E[dep][i];
+		p[tmp[i].id] = i;
+	}
+	if(l == r){ // 求MST
+		init(n);
+		sort(tmp, tmp + n);
+		rep(i, 0, n){
+			if(join(tmp[i].u, tmp[i].v)) res += tmp[i].w;
+		}
+		ans[l] = res; // 直接所有修改完成后的答案
+		return ;
+	} 
+	rep(i, l, r + 1) tmp[p[Q[i].k]].w = -inf; // 被修改的边,用-inf标记必须选上
+	contraction(n, res); 
+	rep(i, l, r + 1) tmp[p[Q[i].k]].w = inf;
+	reducation(n);
+	rep(i, 0, n) E[dep + 1][i] = tmp[i];
+	deps[dep + 1] = n;
+	cdq(l, mid, dep + 1, res);
+	cdq(mid + 1, r, dep + 1, res);
+}
+
+int main(){
+	ios::sync_with_stdio(false); cin.tie(nullptr), cout.tie(nullptr);
+	int n, m, q;
+	cin >> n >> m >> q;
+	rep(i, 0, m){
+		cin >> e[i].u >> e[i].v >> e[i].w;
+		--e[i].u, -- e[i].v;
+		e[i].id = i;
+	}
+	rep(i, 0, q) {
+		cin >> Q[i].k >> Q[i].d;
+		-- Q[i].k;
+	}
+	rep(i, 0, m) {
+		E[0][i] = e[i];
+		W[i] = e[i].w;
+	}
+	deps[0] = m;
+	cdq(0, q - 1, 0, 0);
+	rep(i, 0, q) cout << ans[i] << "\n";
+	return 0;
+} 
