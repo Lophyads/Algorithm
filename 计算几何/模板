@@ -1,7 +1,19 @@
+const double eps = 1e-8;
+const double inf = 1e20;
+const double pi = acos(-1.0);
+int sgn(double x){
+	if(fabs(x) < eps) return 0;
+	if(x < 0) return -1;
+	return 1;
+}
 struct point{
 	double x, y;
-	point(double x = 0, double y = 0) : x(x), y(y){}
+	point(double _x = 0, double _y = 0) : x(_x), y(_y){}
+	bool operator < (const point rhs) const{
+		return x == rhs.x ? y < rhs.y : x < rhs.x;
+	}
 };
+typedef vector<point> Vec;
 point operator + (const point &a, const point &b){
 	return point(a.x + b.x, a.y + b.y);
 }
@@ -20,14 +32,125 @@ point operator / (const point &a, const double &b){
 point operator /= (point &a, const double &b){
 	return point(a.x /= b, a.y /= b);
 }
-double cross(const point &a, const point &b){
-	return a.x * b.y - a.y * b.x;
-}
 point rotate(const point &a, const double &b){
 	return point(a.x * cos(b) - a.y * sin(b), a.x * sin(b) + a.y * cos(b));
 }
-	// 有向面积公式
-	rep(i, 0, n) cin >> p[i].x >> p[i].y;
+bool equ(const point& a, const point& b){
+	return sgn(a.x - b.x) == 0 && sgn(a.y - b.y) == 0;
+}
+double cross(const point& a, const point& b){
+	return (a.x * b.y) - (b.x * a.y);
+}
+double dist(const point& a, const point& b){
+	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+double dis2(const point& a, const point& b){
+	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+double len2(const point& a){
+	return a.x * a.x + a.y * a.y;
+}
+bool cmp2(point a, point b) {
+	return (sgn(cross(a, b)) > 0 || (sgn(cross(a, b)) == 0 && len2(a) < len2(b)));
+}
+void output(vector<point>& A){
+	int n = A.size();
+	cout << fixed << setprecision(2);
+	for(int i = 0; i < n; i++) cout << A[i].x << " " << A[i].y << "\n";
+	return ;
+}
+struct cmp{
+	point p;
+	cmp(const point &p0){p = p0;}
+	bool operator()(const point &aa, const point &bb){
+		point a = aa, b = bb;
+		int d = sgn(cross((a - p), (b - p)));
+		if(d == 0){
+			return sgn(dist(a, p) - dist(b, p)) < 0;
+		}
+		return d > 0;
+	}
+};
+int in(Vec& c, const point& a){ // 判断点是否在多边形内部
+	int n = c.size();
+	if(sgn(cross(a, c[0])) > 0 || sgn(cross(c[n - 1], a)) > 0) {
+		return 0;
+	}
+	ll ps = lower_bound(c.begin(), c.end(), a, cmp2) - c.begin();		
+	-- ps;
+	// cout << ps << endl;
+	if(ps < 0) ps += n;
+	// cout << cross(a - p[ps], p[(ps + 1) % n] - p[ps]) << endl;
+	return sgn(cross(a - c[ps], c[(ps + 1) % n] - c[ps])) <= 0;
+}
+double area(Vec& a){ //有向面积
 	double sum = 0;
-	rep(i, 1, n - 1)
-		sum += 1.0 / 2.0 * cross(p[i] - p[0], p[i + 1] - p[i]);
+	int n = a.size();
+	for(int i = 1; i < n - 1; i ++)
+		sum += 1.0 / 2.0 * cross(a[i] - a[0], a[i + 1] - a[i]);
+	return sum;
+}
+void norm(Vec& c){
+	point mi = c[0];
+	for(int i = 1; i < (int)c.size(); i ++) mi = min(mi, c[i]);
+	sort(c.begin(), c.end(), cmp(mi));
+}
+vector<point> getconvex(vector<point>& A){
+	int n = A.size();
+	vector<point> c;
+	sort(A.begin(), A.end());
+	for(int i = 0; i < min(n, 2); i ++) c.push_back(A[i]);
+	if(c.size() == 2 && equ(c[0], c[1])) { // 特判
+		c.pop_back();
+	}
+	if(n <= 2) return c;
+	for(int i = 2; i < n; i ++){ // 上凸包
+		while((int)c.size() >= 2 && sgn(cross((c.back() - A[i]), (c[c.size() - 2] - A[i]))) <= 0) c.pop_back();
+		c.push_back(A[i]);
+	}
+	int temp = c.size();
+	c.push_back(A[n - 2]);	
+	for(int i = n - 3; i >= 0; i --){ //下凸包
+		while((int)c.size() > temp && sgn(cross((c.back() - A[i]), (c[c.size() - 2] - A[i]))) <= 0) c.pop_back();
+		c.push_back(A[i]);
+	}
+	if(n == 2 && equ(A[0], A[1])) { // 特判
+		c.pop_back();
+		return c;
+	}
+	c.pop_back();
+	norm(c); // 原来得到的是顺时针的点，排序后逆时针
+	return c;
+}
+double RotateCalipers(Vec& c){ // 旋转卡壳(求凸包直径)
+	c.emplace_back(c[0]);
+	int n = c.size();
+	double ans = 0;
+	int j = 2;
+	for(int i = 0; i < n; i ++){
+		// 枚举每条线段,j作为顶点,通过叉积求顶点到与边的三角面积来判断点到边距离的大小
+		while(cross((c[i] - c[i + 1]), (c[i + 1] - c[j])) < cross((c[i] - c[i + 1]), (c[i + 1] - c[j + 1]))) j = (j + 1) % n;
+		ans = max(ans, max(dis2(c[i], c[j]), dis2(c[i + 1], c[j]))); // 左右端点之一到j的距离
+	}
+	return ans;
+}
+Vec Minkowski(const Vec& a, const Vec& b){ // 玟可夫斯基和
+	int an = a.size(), bn = b.size();
+	Vec vec1(an), vec2(bn); //将两个多边形拆成向量
+	Vec res;
+	for(int i = 0; i < an; i ++) vec1[i] = a[(i + 1) % an] - a[i];
+	for(int i = 0; i < bn; i ++) vec2[i] = b[(i + 1) % bn] - b[i];
+	res.push_back(a[0] + b[0]);
+	int p1 = 0, p2 = 0;
+	while(p1 < an && p2 < bn){
+		res.push_back(res.back() + (sgn(cross(vec1[p1], vec2[p2])) >= 0 ? vec1[p1++] : vec2[p2++]));
+	}
+	while(p1 < an) {
+		res.push_back(res.back() + vec1[p1++]);
+	}
+	while(p2 < bn){
+		res.push_back(res.back() + vec2[p2++]);
+	}
+	return res;
+}
+// Pick 定理: 给定顶点均为整点的简单多边形, 皮克定理说明了其面积 A和内部格点数目 i、边上格点数目b的关系： A = i + b / 2 - 1

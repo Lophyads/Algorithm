@@ -59,3 +59,111 @@ namespace CDQ{ // 基于时间的分治算法 P3157 [CQOI2011]动态逆序对
 	dfs(0, n + m - 1);
 	_rep(i, 1, m + 1) ans[i] += ans[i - 1];
 	_rep(i, 0, m) cout << ans[i] << "\n";
+
+二维LIS
+const int N = 5e4 + 10;
+struct node{
+	int id, h, v;
+}boom[N], boom2[N];
+bool cmp1(node& lhs, node& rhs){
+	return lhs.h > rhs.h;
+}
+bool cmp2(node& lhs, node& rhs){
+	return lhs.h < rhs.h;
+}
+int n;
+// f.fi 为以i为结尾的最长LIS长度, f.se为对应方案数, g.fi 为以i开头的最长LIS长度, g.se为对应方案数
+PID f[N], g[N]; 
+PID mx[N]; // 树状数组 维护前缀最大值 
+void Max(PID& u, PID v){
+	if(v.fi > u.fi) u = v;
+	else if(v.fi == u.fi) u.se += v.se;
+}
+void add(int x, PID v){ // (长度,方案数)
+	while(x < N) Max(mx[x], v), x += (x & (-x));
+}
+void clear(int x){
+	while(x < N) mx[x] = {0, 0}, x += (x & (-x));
+}
+PID query(int x){
+	PID res{0, 0};
+	while(x){
+		Max(res, mx[x]);
+		x &= (x - 1);
+	}
+	return res;
+}
+void cdq1(int l, int r){
+	if(l == r) return ;
+	int mid = (l + r) >> 1;
+	cdq1(l, mid);
+	rep(i, l, r + 1) boom2[i] = boom[i];
+	sort(boom2 + l, boom2 + mid + 1, cmp1); // 按h从大到小排序
+	sort(boom2 + mid + 1, boom2 + r + 1, cmp1); // 按h排序
+	for(int i = l, j = mid + 1; j <= r; ++ j){
+		while(i <= mid && boom2[i].h >= boom2[j].h) {
+			add(N - boom2[i].v, f[boom2[i].id]);
+			i ++;
+		}
+		PID res = query(N - boom2[j].v); 
+		res.fi += 1;
+		Max(f[boom2[j].id], res);
+	}
+	rep(i, l, mid + 1) clear(N - boom2[i].v);
+	cdq1(mid + 1, r);
+	return ;
+}
+void cdq2(int l, int r){
+	if(l == r) return ;
+	int mid = (l + r) >> 1;
+	cdq2(l, mid);
+	rep(i, l, r + 1) boom2[i] = boom[i];
+	sort(boom2 + l, boom2 + mid + 1, cmp2); // 按h从小到大排序
+	sort(boom2 + mid + 1, boom2 + r + 1, cmp2); // 按h排序
+	for(int i = l, j = mid + 1; j <= r; ++ j){
+		while(i <= mid && boom2[i].h <= boom2[j].h) {
+			add(boom2[i].v, g[boom2[i].id]);
+			i ++;
+		}
+		PID res = query(boom2[j].v); 
+		res.fi += 1;
+		Max(g[boom2[j].id], res);
+	}
+	rep(i, l, mid + 1) clear(boom2[i].v);
+	cdq2(mid + 1, r);
+	return ;
+}
+int main(){
+	ios::sync_with_stdio(false); cin.tie(nullptr), cout.tie(nullptr);
+	cin >> n;
+	VI b;
+	// ti < tj, hi >= hj, vi >= vj
+	// 二维LIS问题
+	// 做法: cdq分治, 一开始所有点按t排好序, 递归分治求出左侧答案, 
+	// 然后将左右侧导弹同时按h大到小排序, 双指针将左侧大于等于右侧h的v的答案加入BIT, 如果左侧h小于右侧h
+	// 则大于当前v的最大答案,并右移右侧指针
+	rep(i, 0, n){ // 输入的数据已经按时间排好序了
+		cin >> boom[i].h >> boom[i].v;	
+		boom[i].id = i;
+		b.eb(boom[i].v);
+	}
+	sort(all(b));
+	b.erase(unique(all(b)), b.end());
+	rep(i, 0, n)
+		boom[i].v = lb(all(b), boom[i].v) - b.begin() + 1;
+	rep(i, 0, n) f[i] = g[i] = {1, 1};
+	cdq1(0, n - 1); // 求f和f1
+	reverse(boom, boom + n);
+	cdq2(0, n - 1); // 求g 和g1
+	PID ans = {0, 0};
+	rep(i, 0, n) Max(ans, f[i]);
+	cout << ans.fi << "\n";
+	cout << fixed << setprecision(5);
+	rep(i, 0, n){
+		if(f[i].fi + g[i].fi - 1 == ans.fi){
+			cout << (1.0 * f[i].se * g[i].se) / (ans.se) << " ";
+		}
+		else cout << 0.0 << " ";
+	}
+	return 0;
+} 
