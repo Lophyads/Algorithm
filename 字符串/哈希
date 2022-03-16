@@ -1,0 +1,19 @@
+	ll power[maxn];//power[i]记录p的i次方
+    ll hash_mod = 1e12 + 39;
+    int p = 131;
+	power[0] = 1;
+	rep(i, 1, maxn){
+        power[i] = (power[i - 1] * p) % hash_mod;
+    }
+	auto get_hash = [&](string s){
+		ll res = 0;
+		rep(i, 1, s.size() + 1){
+    		res = (res * p + s[i - 1] - 'a' + 1) % hash_mod;
+    	}
+    	return res;
+	};
+    auto get = [&](int l, int r){// hash_mod = 1e9 + 7
+		ll res = (Hash[r] - Hash[l - 1] * power[r - l + 1]) % hash_mod;
+		while(res < 0) res += hash_mod;
+		return res % hash_mod;
+	};

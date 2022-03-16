@@ -20,7 +20,7 @@ namespace G{
         flow_g = VII(N);
         flow_e.clear();
     }
-    void add_flow(int u, int v, int w){
+    void flow_add(int u, int v, int w){
         flow_g[u].eb(flow_e.size());
         flow_e.eb(v, w);
         flow_g[v].eb(flow_e.size());
@@ -79,7 +79,7 @@ namespace G{
         cost_e.clear();
         cost = 0;
     }
-    void add_cost(int u, int v, int w, int c){// 费用流
+    void cost_add(int u, int v, ll w, ll c){// 费用流
         cost_g[u].eb(cost_e.size());
         cost_e.eb(v, w, c);
         cost_g[v].eb(cost_e.size());
@@ -123,6 +123,7 @@ namespace G{
             ll f = cost_dinic(v, min(lim, w));
             if(!f) continue;
             cost += f * c;
+            // 每增加1流量,费用就会加d[T]
             cost_e[id].w -= f;
             cost_e[id ^ 1].w += f;
             tot += f;
@@ -159,11 +160,11 @@ namespace G{
         tr[x].eb(y, cut);
         tr[y].eb(x, cut);//添加最小割边到树上
         int p = l, t = r;
-        _rep(i, l, r + 1){
+        rep(i, l, r + 1){
             if(d[pdx[i]]) tdx[p ++] = pdx[i];//最后一次bfs有深度,说明与x相连
             else tdx[t--] = pdx[i];
         }
-        _rep(i, l, r + 1) pdx[i] = tdx[i];
+        rep(i, l, r + 1) pdx[i] = tdx[i];
         dfs(l, p - 1);
         dfs(t + 1, r);
     }
@@ -206,14 +207,14 @@ namespace G{
         ll ans = KINF;
         if(h[u] > h[v]) swap(u, v);
         int M = __lg(N) + 2;
-        _dep(i, M - 1, -1){
+        _rep(i, M - 1, -1){
             if(h[fa[v][i]] >= h[u]){
                 ans = min(ans, mi[v][i]);
                 v = fa[v][i];
             }
             if(v == u) return ans;
         }
-        _dep(i, M - 1, -1){
+        _rep(i, M - 1, -1){
             if(fa[u][i] != fa[v][i]){
                 ans = min({ans, mi[u][i], mi[v][i]});
                 u = fa[u][i];

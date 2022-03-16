@@ -1,5 +1,14 @@
-template<typename T> inline void read(T& x){
-	T ret = 0, sgn = 1;
+static char buf[100000],*pa = buf, *pd = buf;
+#define gc pa == pd && (pd = (pa = buf) + fread(buf,1,100000,stdin),pa == pd) ? EOF : *pa++
+template<typename T> inline void rd(T& x){
+	register T ret(0), sgn(1);
+	register char c(gc);
+	while(!isdigit(c)) sgn = (c == '-' ? -1 : 1), c = gc;
+	while(isdigit(c)) ret = (ret << 3) + (ret << 1) + c - '0', c = gc;
+	x = (sgn == -1 ? -ret : ret);
+}
+template<typename T> inline void rd(T& x){
+	T ret(0), sgn(1);
 	char c = getchar();
 	while(!isdigit(c)) sgn = (c == '-' ? -1 : 1), c = getchar();
 	while(isdigit(c)) ret = (ret << 3) + (ret << 1) + c - '0', c = getchar();
@@ -18,6 +27,40 @@ template<class T> inline void write(T x){
     while(num) putchar(chr[num--]);
     return ;
 }
+char ibuf[1 << 25], *p1 = ibuf, obuf[1 << 20], *p2 = obuf;
+struct Fio{
+	Fio() { fread(ibuf, 1, 1 << 25, stdin); }
+	Fio &operator>>(int &x){
+		char ch;
+		while (ch = *p1++, ch < '0')
+			;
+		x = ch ^ 48;
+		while (ch = *p1++, ch >= '0')
+			x = (x << 1) + (x << 3) + (ch ^ 48);
+		return *this;
+	}
+	Fio &operator<<(ll &&x){
+		if (x < 0)
+			*p2++ = '-', x = -x;
+		if (x > 9)
+			*this << (x / 10);
+		*p2++ = x % 10 | 48;
+		return *this;
+	}
+	Fio &operator<<(int &&x){
+		if (x < 0)
+			*p2++ = '-', x = -x;
+		if (x > 9)
+			*this << (x / 10);
+		*p2++ = x % 10 | 48;
+		return *this;
+	}
+	inline Fio &operator<<(char &&x){
+		*p2++ = x;
+		return *this;
+	}
+	~Fio() { fwrite(obuf, 1, p2 - obuf, stdout); }
+} io;
 //
 struct control{
 	int ct,val;

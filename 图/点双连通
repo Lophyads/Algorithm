@@ -1,0 +1,56 @@
+int n, m;
+VI g[N];
+vector<int> stk;
+vector<int> vcc;
+int dfn[N], low[N], be[N], cut[N];
+int ans1, ans2, p, q;
+int ti;
+void init(){
+	rep(i, 1, n + 1) {
+		g[i].clear();
+		dfn[i] = low[i] = cut[i] = 0;
+		be[i] = 0;
+	}
+	stk.clear();
+	ti = ans1 = ans2 = p = q = 0;
+}
+void calc(){
+	int res = 0;
+	for(int& u : vcc){
+		for(int& v : g[u]) if(be[v] == p) res ++; // 当前点双的边数
+	}
+	q = max(q, res / 2);
+}
+void dfs(int u, int fa){
+	dfn[u] = low[u] = ++ ti;
+	stk.eb(u);
+	int child = 0;
+	for(int& v : g[u]){
+		if(v == fa) continue;
+		if(!dfn[v]) {
+			dfs(v, u);
+			low[u] = min(low[u], low[v]);
+			if(u == fa) child ++;// 子树
+			if(low[v] >= dfn[u]) {
+				if(!cut[u] && u != fa) ans1 ++, cut[u] = 1; // 在环上且有父亲
+				vcc.clear();
+				++ p; // 点双个数
+				int _v;
+				vcc.clear();
+				do{
+					_v = stk.back();
+					stk.pop_back();
+					be[_v] = p;
+					vcc.eb(_v);
+				}while(_v != v);
+				be[u] = p;
+				vcc.eb(u);
+				calc();// 计算当前点双的边数
+			}					
+			if(low[v] > dfn[u]) ans2 ++; // 割边
+		}
+		else low[u] = min(low[u], dfn[v]);
+		// 当前点为根且有两颗以上子树
+		if(!cut[u] && (u == fa && child >= 2)) ans1 ++, cut[u] = 1; // u为割点
+	}
+}

@@ -1,0 +1,49 @@
+template <int N> struct mat {
+    ll a[N][N];
+    inline mat() { memset(a, 0, sizeof a); }
+    inline mat operator-(const mat& T) const {
+        mat res;
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j) {
+                res.a[i][j] = (a[i][j] - T.a[i][j]) % mod;
+            }
+        return res;
+    }
+    inline mat operator+(const mat& T) const {
+        mat res;
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j) {
+                res.a[i][j] = (a[i][j] + T.a[i][j]) % mod;
+            }
+        return res;
+    }
+    inline mat operator*(const mat& T) const {
+        mat res;
+        int r;
+        for (int i = 0; i < N; ++i)
+            for (int k = 0; k < N; ++k) {
+                r = a[i][k];
+                for (int j = 0; j < N; ++j)
+                    res.a[i][j] += T.a[k][j] * r, res.a[i][j] %= mod;
+            }
+        return res;
+    }
+    inline mat operator^(ll x) const {
+        mat res, bas;
+        for (int i = 0; i < N; ++i) res.a[i][i] = 1;
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j) bas.a[i][j] = a[i][j];
+        while (x) {
+            if (x & 1) res = res * bas;
+            bas = bas * bas;
+            x >>= 1;
+        }
+        return res;
+    }
+    bool operator == (const mat& T) const {
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+                if (a[i][j] != T.a[i][j]) return false;
+        return true;
+    }
+};

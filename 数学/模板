@@ -20,7 +20,7 @@ void get_prim(int num){//线性筛素数
     vector<int> prim;
 	//memset(v, 0, sizeof v);
     for(int i = 2; i <= N; i++){
-        if(!v[i]) prim.eb(i);
+        if(!v[i]) prim.eb(i), v[i] = i;
         for(int& p : prim){   	
         	if(p > v[i] || p * i > N) break;
             v[p * i] = p; // if(!v[i]) i 为质数  
