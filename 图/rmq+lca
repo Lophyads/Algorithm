@@ -1,0 +1,36 @@
+int md[N << 2][20]; // dfs序[i, i+(1 << j)]之间深度最小的点
+int lg[N << 2];
+int dep[N << 2], fir[N << 2], eular[N << 2]; // dfn对应的深度,节点第一次进入的dfn,欧拉序列
+int n, m;
+int dfn;
+void dfs(int u, int fa = -1, int d = 1){
+    fir[u] = ++ dfn;
+    eular[dfn] = u;
+    dep[dfn] = d;
+    for(int& v : g[u]){
+        if(v == fa) continue;
+        dfs(v, u, d + 1);
+        eular[++dfn] = u;
+        dep[dfn] = d;
+    }
+}
+void init(int n){
+    for(int i = 1; i <= n; i ++) md[i][0] = i;
+    lg[1] = 0;
+    for(int i = 2; i <= n; i ++) lg[i] = lg[i >> 1] + 1;
+    for(int j = 1; j < 20; j ++){
+        for(int i = 1; i + (1 << j) - 1 <= n; i ++){
+            int x = md[i][j - 1], y = md[i + (1 << (j - 1))][j - 1];
+            if(dep[x] < dep[y]) md[i][j] = x;
+            else md[i][j] = y;
+        }
+    }
+}
+int LCA(int l, int r){ // O1求lCA
+    l = fir[l], r = fir[r];
+    if(l > r) swap(l, r);
+    int k = lg[r - l + 1];
+    int x = md[l][k], y = md[r - (1 << k) + 1][k];
+    if(dep[x] < dep[y]) return eular[x];
+    return eular[y];
+}

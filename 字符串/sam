@@ -1,0 +1,105 @@
+namespace SAM{
+	// SAM 的总状态数不超过2n - 1, 总转移数不超过3n - 4
+	const int maxn = 1e6 + 10;
+	ll cnt = 0; // 本质不同子串个数
+	struct state{
+		int len, fa;
+		int next[26];
+		int sz; // 节点对应子串集合出现的次数
+		ll num; // 该节点往下走的路径数
+	}sam[maxn << 1];
+	int tot = 1, last = 1;
+	void insert(int c){
+		int cur = ++ tot;
+		sam[cur].sz = 1;
+		sam[cur].len = sam[last].len + 1;
+		int p = last;
+		while(p && !sam[p].next[c]) {
+			sam[p].next[c] = cur;
+			p = sam[p].fa;
+		}
+		int q = sam[p].next[c];
+		if(!q){
+			sam[cur].fa = 1;
+			cnt += sam[cur].len;
+		}
+		else if(sam[p].len + 1 == sam[q].len){
+			sam[cur].fa = q;
+			cnt += sam[cur].len - sam[q].len;
+		}
+		else{
+			int tmp = ++ tot;
+			sam[tmp] = sam[q];
+			sam[tmp].sz = 0;
+			sam[tmp].len = sam[p].len + 1;
+			while(p && sam[p].next[c] == q){
+				sam[p].next[c] = tmp;
+				p = sam[p].fa;
+			}
+			sam[cur].fa = sam[q].fa = tmp;
+			cnt += sam[cur].len - sam[tmp].len;
+		}
+		last = cur;
+	}
+	vector<int> tr[maxn << 1];
+	void build(){ // 建parent 树
+		for(int i = 1; i <= tot; i ++) tr[i].clear();
+		for(int i = 2; i <= tot; i ++){
+			if(sam[i].fa){
+				tr[sam[i].fa].emplace_back(i);
+			}
+		}
+	}
+	void dfs(int u){// 树形dp 求每个点的endpos大小
+		for(int& v : tr[u]){
+			dfs(v);
+			sam[u].sz += sam[v].sz;
+		}
+	}
+	void get_dp(int t){ // 求每个点往下的路径数
+		// t = 1 相同的子串出现在不同的位置视为多个，t = 0视为一个
+		vector<int> cnt(tot + 1);
+		vector<int> rk(tot + 1);
+		for(int i = 1; i <= tot; i ++) cnt[sam[i].len] += 1;
+		for(int i = 1; i <= tot; i ++) cnt[i] += cnt[i - 1];
+		for(int i = 1; i <= tot; i ++) rk[cnt[sam[i].len]--] = i;	
+		for(int i = tot; i; i --) {
+			if(t)
+				sam[sam[rk[i]].fa].sz += sam[rk[i]].sz;
+			else sam[rk[i]].sz = 1;
+		}
+		sam[1].sz = 0;
+		for(int i = tot; i ; i --){
+			sam[rk[i]].num = sam[rk[i]].sz;
+			for(int j = 0; j < 26; j ++) sam[rk[i]].num += sam[sam[rk[i]].next[j]].num; 
+		}
+	}
+	string kth(int k){ // 求字典序第k小子串
+		if(sam[1].num < k) return "-1";
+		int u = 1;
+		string ans;
+		while(k > 0){
+			for(int i = 0; i < 26; i ++){
+				if(sam[sam[u].next[i]].num < k){
+					k -= sam[sam[u].next[i]].num;
+				}
+				else{
+					ans += (char)('a' + i);
+					u = sam[u].next[i];
+					k -= sam[u].sz;
+					break;
+				}
+			}
+		}
+		return ans;
+	}
+	/* 本质不同子串个数
+	   每个节点代表(cur.len - cur.fa.len)个不同子串
+	   对所有节点求和即答案
+	*/ 
+	
+	/* 所有不同子串的总长度
+		每个节点上子串的总长度为(cur.len + (cur.len + 1)) / 2 减去fa节点的总长度
+		对所有节点求和即答案
+	*/
+};

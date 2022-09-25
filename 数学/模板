@@ -27,135 +27,103 @@ void get_prim(int num){//线性筛素数
         }
     }
 }
-ll mul(ll a, ll b, ll p){//快速乘
-    ll res = 0, t = a % p;
-    while(b){
-        if(b & 1) res = (res + t) % p;
-        b >>= 1;
-        t = (t + t) % p;
-    }
-    return res;
-}
-ll qmi(ll a, ll b, ll p){//龟速幂
-    ll ans = 1, t = a;
-    while(b){
-        if(b & 1) ans = mul(ans, t, p);//龟速乘防止爆long long
-        t = mul(t, t, p);
-        b >>= 1;
-    }
-    return ans;
-}
-	auto phi = [&](ll x){//欧拉函数
-	    ll ans = x;
-		/* 欧拉函数是积性函数
-			对于素数p而言,φ(p) = p - 1
-			φ(p ^ k) = p ^ k - p ^ (k - 1)
-			而任意一个数都可以表示为若干个素数的次方的乘积
-			φ(x) = φ(p1^k1) * φ(p2^k2) * φ(p3^k3) ...
-				= (p1^k1  - p1^(k1-1)) * (p2^k2  - p2^(k2-1)) * (p3^k1  - p3^(k3-1))
-				= p1^k1 * p2^k2 * p3^k3 * (1 - 1 / p1) * (1 - 1 / p2) * (1 - 1 / p3)
-				= x * (1 - 1 / p1) * (1 - 1 / p2) * (1 - 1 / p3)
-		*/
-	    for(int i = 2; i * i <= x; i++){
-	        if(x % i == 0){
-	            ans = ans / i * (i - 1); 
-	            while(x % i == 0) x /= i;
-	        }
-	    }
-	    if(x > 1) ans = ans / x * (x - 1);
-	    return ans;
-		/* 关于欧拉函数的一些性质
-			(1) n的所有约数的欧拉函数值等于n
-			(2) 所有小于n且与n互素的数之和等于 n / 2 * φ(n)
-		*/
-	};
+auto phi = [&](ll x){//欧拉函数
+	ll ans = x;
+	/* 欧拉函数是积性函数
+		对于素数p而言,φ(p) = p - 1
+		φ(p ^ k) = p ^ k - p ^ (k - 1)
+		而任意一个数都可以表示为若干个素数的次方的乘积
+		φ(x) = φ(p1^k1) * φ(p2^k2) * φ(p3^k3) ...
+			= (p1^k1  - p1^(k1-1)) * (p2^k2  - p2^(k2-1)) * (p3^k1  - p3^(k3-1))
+			= p1^k1 * p2^k2 * p3^k3 * (1 - 1 / p1) * (1 - 1 / p2) * (1 - 1 / p3)
+			= x * (1 - 1 / p1) * (1 - 1 / p2) * (1 - 1 / p3)
+	*/
+	for(int i = 2; i * i <= x; i++){
+		if(x % i == 0){
+			ans = ans / i * (i - 1); 
+			while(x % i == 0) x /= i;
+		}
+	}
+	if(x > 1) ans = ans / x * (x - 1);
+	return ans;
+	/* 关于欧拉函数的一些性质
+		(1) n的所有约数的欧拉函数值等于n
+		(2) 所有小于n且与n互素的数之和等于 n / 2 * φ(n)
+	*/
+};
 int c(int n, int k, int mod){//求大组合数
-    _rep(i, 0, n + 1) fac[i] = i ? fac[i - 1] * i % mod : 1;
-	_rep(i, 1, n + 1) inv[i] = i == 1 ? 1 : (mod - mod / i) * inv[mod % i] % mod;//求i的乘法逆元
-	_rep(i, 0, n + 1) inv[i] = i ? inv[i - 1] * inv[i] % mod : 1;//求i! 的乘法逆元
+    rep(i, 0, n + 1) fac[i] = i ? fac[i - 1] * i % mod : 1;
+	rep(i, 1, n + 1) inv[i] = i == 1 ? 1 : (mod - mod / i) * inv[mod % i] % mod;//求i的乘法逆元
+	rep(i, 0, n + 1) inv[i] = i ? inv[i - 1] * inv[i] % mod : 1;//求i! 的乘法逆元
+	// ka + b = mod,   两边同乘inv(a) * inv(b)   k * inv(b) + inv(a) = mod,  inv(a) = -(m - m / a) * inv(m % a)
     return fac[n] * inv[k] % mod * inv[n - k] % mod;
 }// edu33E
-	auto lucas = [&](auto&& lucas, ll n, ll m, ll mod) -> ll{	// 卢卡斯定理	
-		auto C = [&](ll n, ll m){
-			if(n < m) return 0ll;
-			auto qmi = [&](ll a, ll x){// 快速幂
-				ll res = 1;
-				while(x){
-					if(x & 1) (res *= a) %= mod;
-					(a *= a) %= mod;
-					x >>= 1;
-				}
-				return res;
-			};
-			ll ans = 1, inv = 1;
-			for(ll i = n, j = 1; j <= m; i --, j ++){
-				(ans *= i) %= mod;
-				(inv *= j) %= mod;
+auto lucas = [&](auto&& lucas, ll n, ll m, ll mod) -> ll{	// 卢卡斯定理	
+	auto C = [&](ll n, ll m){
+		if(n < m) return 0ll;
+		auto qmi = [&](ll a, ll x){// 快速幂
+			ll res = 1;
+			while(x){
+				if(x & 1) (res *= a) %= mod;
+				(a *= a) %= mod;
+				x >>= 1;
 			}
-			inv = qmi(inv, mod - 2) % mod;
-			return ans * inv % mod;
+			return res;
 		};
-		if(n < mod && m < mod) return C(n, m);
-		return C(n % mod, m % mod) * lucas(lucas, n / mod, m / mod, mod) % mod;
+		ll ans = 1, inv = 1;
+		for(ll i = n, j = 1; j <= m; i --, j ++){
+			(ans *= i) %= mod;
+			(inv *= j) %= mod;
+		}
+		inv = qmi(inv, mod - 2) % mod;
+		return ans * inv % mod;
 	};
-    auto crt = [&](){// 中国剩余定理
-        ll M = 1;
-        _rep(i, 0, n) M *= m[i];
-        ll x, y;
-        auto exgcd = [&](auto&& exgcd, ll a, ll b){
-            if(!b){
-                x = 1;
-                y = 0;
-                return ;
-            }
-            exgcd(exgcd, b, a % b);
-            int t = x;
-            x = y;
-            y = t - (a / b) * y;
-            return;
-        };
-        ll ans = 0;
-        _rep(i, 0, n){
-            ll mi = M / m[i];
-            exgcd(exgcd, mi, m[i]);// 求mi在模m[i]的意义下的逆元(x)
-            (ans += 1ll * a[i] * mi * x) %= M;
-        }
-        if(ans < 0) ans += M;
-        return ans;
-    };
-ll excrt(VL& a, VL& m, int n){// 扩展中国剩余定理
-	ll ans = a[0], M = m[0];
+	if(n < mod && m < mod) return C(n, m);
+	return C(n % mod, m % mod) * lucas(lucas, n / mod, m / mod, mod) % mod;
+};
+auto crt = [&](){// 中国剩余定理
+	ll M = 1;
+	_rep(i, 0, n) M *= m[i];
 	ll x, y;
-	auto mul = [&](ll x, ll y, ll mod){// 快速乘
-		ll res = 0;
-		while(y){
-			if(y & 1) res = (res + x) % mod;
-			x = (x + x) % mod;
-			y >>= 1;
-		}
-		return res;
-	};
-	auto exgcd = [&](auto&& exgcd, ll a, ll b) -> ll{
+	auto exgcd = [&](auto&& exgcd, ll a, ll b){
 		if(!b){
-			x = 1, y = 0;
-			return a;
+			x = 1;
+			y = 0;
+			return ;
 		}
-		ll res = exgcd(exgcd, b, a % b);
-		ll t = x;
+		exgcd(exgcd, b, a % b);
+		int t = x;
 		x = y;
 		y = t - (a / b) * y;
-		return res;
+		return;
 	};
-	_rep(i, 1, n){
-		ll A = M, b = m[i], c = (a[i] - ans % b + b) % b;
-		ll gcd = exgcd(exgcd, A, b), bg = b / gcd;
-		if(c % gcd) return -1;//无解
-		x = mul(x, c / gcd, bg);
-		ans += M * x;
-		M *= bg;
-		ans = (ans % M + M) % M;
+	ll ans = 0;
+	_rep(i, 0, n){
+		ll mi = M / m[i];
+		exgcd(exgcd, mi, m[i]);// 求mi在模m[i]的意义下的逆元(x)
+		(ans += 1ll * a[i] * mi * x) %= M;
 	}
-	return (ans % M + M) % M;
+	if(ans < 0) ans += M;
+	return ans;
+};
+ll excrt(VL& b, VL& m){// 余数,模
+	ll r1 = b[0], m1 = m[0];
+	// 合并同余方程
+	rep(i, 1, SZ(m)){
+		ll r2 = b[i], m2 = m[i];
+		ll d = __gcd(m1, m2);
+		ll LCM = lcm(m1, m2);
+		if(r2 % d != r1 % d) return -1;
+		exgcd(m1 / d, m2 / d);
+		ll t = (r2 - r1) / d;
+		if(t < LCM) t += LCM;
+		ll k1 = qmul(X, t, LCM);
+		r1 += qmul(k1, m1, LCM);
+		r1 %= LCM;
+		if(r1 <= 0) r1 += LCM;
+		m1 = LCM; 
+	}
+	return r1;
 }
 constexpr int N = 5e4 + 7;
 int mu[N], vis[N];
@@ -178,17 +146,44 @@ void get_mu(){// 线性筛求莫比乌斯函数
 		}
 	}
 }
-	auto BSGS = [&](ll a, ll b, ll p) -> int{// 大步小步
+auto BSGS = [&](ll a, ll b, ll p) -> int{// 大步小步
+	unordered_map<ll,ll> mp;
+	/* 由欧拉定理可得, a ^ φ(p) ≡ 1 (mod p)
+		由鸽巢定理得0<= x < φ(p) <= p - 1 < p
+		但可以用meet in the middle的思想把x 拆为 At + B
+		a ^ At ≡ b * a ^ B(mod p)
+		因为A的可能取值为φ(p) / t个, B的可能取值为 φ(p) % t个
+		所以可以取t = sqrt(m)
+		然后对A,B枚举(1 ~ t), 就可以保证x ∈ (1, φ(p))都被枚举一遍
+		这样复杂度就变为sqrt(p) 
+	*/
+	ll cur = b * a % p, t = sqrt(p) + 1;
+	_rep(B, 1, t + 1){
+		mp[cur] = B;
+		(cur *= a) %= p;
+	}
+	auto qmi = [&](ll a, ll x){
+		ll res = 1;
+		a %= p;
+		while(x){
+			if(x & 1) (res *= a) %= p;
+			x >>= 1;
+			(a *= a) %= p;
+		}
+		return res;
+	};
+	ll at = qmi(a, t);
+	ll now = at;
+	_rep(A, 1, t + 1){
+		if(mp[now]) return A * t - mp[now];
+		(now *= at) %= p;
+	}
+	return -1;
+};
+	// 拓展BSGS
+auto exBSGS = [&](auto&& exBSGS, ll a, ll b, ll p, ll k = 1) -> ll{// k为系数
+	auto BSGS = [&](ll a, ll b, ll p, ll k = 1) -> int{// 大步小步(带系数)
 		unordered_map<ll,ll> mp;
-		/* 由欧拉定理可得, a ^ φ(p) ≡ 1 (mod p)
-			由鸽巢定理得0<= x < φ(p) <= p - 1 < p
-			但可以用meet in the middle的思想把x 拆为 At + B
-			a ^ At ≡ b * a ^ B(mod p)
-			因为A的可能取值为φ(p) / t个, B的可能取值为 φ(p) % t个
-			所以可以取t = sqrt(m)
-			然后对A,B枚举(1 ~ t), 就可以保证x ∈ (1, φ(p))都被枚举一遍
-			这样复杂度就变为sqrt(p) 
-		*/
 		ll cur = b * a % p, t = sqrt(p) + 1;
 		_rep(B, 1, t + 1){
 			mp[cur] = B;
@@ -205,47 +200,20 @@ void get_mu(){// 线性筛求莫比乌斯函数
 			return res;
 		};
 		ll at = qmi(a, t);
-		ll now = at;
+		ll now = at * k % p;
 		_rep(A, 1, t + 1){
 			if(mp[now]) return A * t - mp[now];
 			(now *= at) %= p;
 		}
-		return -1;
-	};
-	// 拓展BSGS
-	auto exBSGS = [&](auto&& exBSGS, ll a, ll b, ll p, ll k = 1) -> ll{// k为系数
-		auto BSGS = [&](ll a, ll b, ll p, ll k = 1) -> int{// 大步小步(带系数)
-			unordered_map<ll,ll> mp;
-			ll cur = b * a % p, t = sqrt(p) + 1;
-			_rep(B, 1, t + 1){
-				mp[cur] = B;
-				(cur *= a) %= p;
-			}
-			auto qmi = [&](ll a, ll x){
-				ll res = 1;
-				a %= p;
-				while(x){
-					if(x & 1) (res *= a) %= p;
-					x >>= 1;
-					(a *= a) %= p;
-				}
-				return res;
-			};
-			ll at = qmi(a, t);
-			ll now = at * k % p;
-			_rep(A, 1, t + 1){
-				if(mp[now]) return A * t - mp[now];
-				(now *= at) %= p;
-			}
-			return -KINF;//保证多次加1后仍是负数(负数表示无解)
-		};
-		if(b == 1) return 0ll;
-		if(!a && !b) return 1ll;
-		ll d = __gcd(a, p);
-		if(b % d) return -KINF;//保证多次加1后仍是负数(负数表示无解)
-		if(d == 1) return BSGS(a, b, p, k % p);
-		return exBSGS(exBSGS, a, b / d, p / d, k * a / d % p) + 1;
-	};
+		return -KINF;//保证多次加1后仍是负数(负数表示无解)
+	}; 
+	if(b == 1) return 0ll;
+	if(!a && !b) return 1ll;
+	ll d = __gcd(a, p);
+	if(b % d) return -KINF;//保证多次加1后仍是负数(负数表示无解)
+	if(d == 1) return BSGS(a, b, p, k % p);
+	return exBSGS(exBSGS, a, b / d, p / d, k * a / d % p) + 1;
+};
 
 
 
