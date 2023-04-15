@@ -54,3 +54,4 @@ void dfs(int u, int fa){
 		if(!cut[u] && (u == fa && child >= 2)) ans1 ++, cut[u] = 1; // u为割点
 	}
 }
+// dfs(root, root)

@@ -1,0 +1,237 @@
+namespace SA{ // 板
+    #define rep(i, x, y) for(int i = (int)x; i < (int)y; ++ i)
+    #define _rep(i, x, y) for(int i = (int)x; i > (int)y; -- i)
+    const int N = 2e5 + 10, M = __lg(N) + 2;
+    // sa[i] 为排名为i的后缀编号, rk[i]为后缀编号为i的后缀的排名, height[i]为排名i - 1与 i的最长公共前缀
+    int sa[N], rk[N], id[N], px[N], c[N], oldrk[N], height[N];
+    int s[N];
+    int f[N][M];
+    int n;
+    inline bool cmp(int x, int y, int w){
+        return oldrk[x] == oldrk[y] && oldrk[x + w] == oldrk[y + w];
+    }
+    void get_sa(){
+        int m = 300, p, i;// 值域 
+        rep(i, 1, m + 1) c[i] = 0;
+        rep(i, 1, n + 1) ++ c[rk[i] = s[i]];
+        rep(i, 1, m + 1) c[i] += c[i - 1];
+        _rep(i, n, 0) sa[c[rk[i]] --] = i;
+        for(int w = 1; w < n; w <<= 1, m = p){
+            for(p = 0, i = n; i > n - w; i --) id[++ p] = i;
+            rep(i, 1, n + 1) if(sa[i] > w) id[++ p] = sa[i] - w;
+            rep(i, 1, m + 1) c[i] = 0;
+            rep(i, 1, n + 1) ++ c[px[i] = rk[id[i]]];
+            rep(i, 1, m + 1) c[i] += c[i - 1];
+            _rep(i, n, 0) sa[c[px[i]] --] = id[i];
+            rep(i, 1, n + 1) oldrk[i] = rk[i];
+            p = 0;
+            rep(i, 1, n + 1) rk[sa[i]] = cmp(sa[i], sa[i - 1], w) ? p : ++ p;
+        }
+    }
+    void get_height(){ // 先求出SA在求height
+        int k = 0;
+        rep(i, 1, n + 1){
+            int idx = rk[i];
+            if(idx == 1) continue;
+            int j = sa[idx - 1];
+            while(i + k <= n && j + k <= n && s[i + k] == s[j + k]) k ++;
+            height[idx] = k;
+            k = max(k - 1, 0);
+        }
+    }
+    void init(){
+    	int m = __lg(n);
+    	for(int i = 1; i <= n; ++ i) f[i][0] = height[i];
+    	for(int j = 1; j <= m; ++ j){
+    		for(int i = 1; i + (1 << j) - 1 <= n; ++ i){
+    			f[i][j] = min(f[i][j - 1], f[i + (1 << (j - 1))][j - 1]);
+    		}
+    	}
+    }
+    inline int lcp(int l, int r){
+        if(l == r) return n - l + 1;
+    	l = rk[l], r = rk[r];
+    	if(l > r) swap(l, r);
+    	++ l;
+    	int k = __lg(r - l + 1);
+    	return min(f[l][k], f[r - (1 << k) + 1][k]);
+    }
+    void clear(){
+    	for(int i = 1; i <= n; ++ i) s[i] = oldrk[i] = 0;
+    }
+}
+//做法一 O(nlog²n)
+//做法二 使用Radix_Sort 或 count_sort 复杂度降至O(nlogn)
+#include <bits/stdc++.h>
+using namespace std;
+//#define LOCAl
+#define fr(x) freopen(x,"r",stdin)
+#define fw(x) freopen(x,"w",stdout)
+namespace SOLVE{
+    {//简易版后缀数组
+    const int N = 1000010;
+    int sa[N], rk[N << 1], oldrk[N << 1];//sa[i]记录所有后缀排序后第i小的后缀的编号,rk[i]表示后缀i的排名
+    char s[N];
+        scanf("%s", s);
+        int n = strlen(s);
+        s[n++] = '$';
+        for(int i = 0; i < n; i++) sa[i] = i, rk[i] = s[i];
+        int k = 0;
+        while((1 << k) < n){
+            sort(sa, sa + n, [&](const int& x, const int& y){
+                return rk[x] == rk[y] ? rk[x + (1 << k)] < rk[y + (1 << k)] : rk[x] < rk[y];
+            });
+            memcpy(oldrk,rk,sizeof(rk));
+            //更新rk数组
+            oldrk[sa[0]] = rk[sa[0]] = 0;
+            for(int i = 1, rank = 0; i < n; i++){
+                if(oldrk[sa[i]] == oldrk[sa[i - 1]] and oldrk[sa[i] + (1 << k)] == oldrk[sa[i - 1] + (1 << k)])
+                    rk[sa[i]] = rank;
+                else rk[sa[i]] = ++rank;
+            }
+            k++;
+        }
+        int lcp[n];//lcp[i]为后缀数组中第i个字符串和第i - 1个字符串的最长公共前缀
+        k = 0;
+        for(int i = 0; i < n - 1; i++){
+            int idx = rk[i];
+            int j = sa[idx - 1];
+            while(s[i + k] == s[j + k]) k++;
+            lcp[idx] = k;
+            k = max(k - 1, 0);
+        }
+        for(int i = 0; i < n; i++) printf("%d ", sa[i]);
+        puts("");
+        for(int i = 1; i < n; i++) printf("%d ", lcp[i]);
+        return 0;
+    }
+    void count_sort(vector<int>& ans, vector<int>& c){
+        int n = ans.size();
+        vector<int> cnt(n);
+        for(auto& x : c) cnt[x]++;
+        vector<int> ans_new(n);
+        vector<int> pos(n);
+        pos[0] = 0;
+        for(int i = 1;i < n; i++) pos[i] = pos[i - 1] + cnt[i - 1];
+        for (auto& x : ans) {
+            int i = c[x];
+            ans_new[pos[i]] = x;
+            pos[i]++;
+        }
+        ans = ans_new;
+    }
+    void Radix_Sort(vector<pair<pair<int,int>,int>>& a){
+        {
+            int n = a.size();
+            vector<int> cnt(n);
+            for(auto& x : a) cnt[x.first.second]++;
+            vector<int> pos(n, 0);
+            vector<pair<pair<int,int>,int>> a_new(n);
+            for(int i = 1; i < n; i++) pos[i] = pos[i - 1] + cnt[i - 1];
+            for(auto& x : a){
+                int i = x.first.second;
+                a_new[pos[i]] = x;
+                pos[i] ++;
+            }
+            a = a_new;
+        }
+
+        {
+            int n = a.size();
+            vector<int> cnt(n);
+            for(auto& x : a) cnt[x.first.first]++;
+            vector<int> pos(n, 0);
+            vector<pair<pair<int,int>,int>> a_new(n);
+            for(int i = 1; i < n; i++) pos[i] = pos[i - 1] + cnt[i - 1];
+            for(auto& x : a){
+                int i = x.first.first;
+                a_new[pos[i]] = x;
+                pos[i] ++;
+            }
+            a = a_new;
+        }
+
+    }
+    int main(){
+        string s;
+        cin >> s;
+        s += '$';//加一个标识符来替代空串后缀
+        int n = s.size();
+        vector<int> ans(n), c(n);
+        //ans存后缀的开始下标,按后缀大小升序排序
+        //c数组用来快速比较字符串大小
+        {//预处理
+            vector<pair<char, int>> a(n);
+            for(int i = 0; i < n; i++) a[i] = {s[i], i};
+            sort(a.begin(), a.end());
+
+            for(int i = 0; i < n; i++) ans[i] = a[i].second;
+            c[ans[0]] = 0;
+            for(int i = 1; i < n; i++){
+                if(a[i].first == a[i - 1].first)
+                    c[ans[i]] = c[ans[i -1]];
+                else
+                    c[ans[i]] = c[ans[i - 1]] + 1;
+            }
+        }
+        int k = 0;
+        while((1 << k) < n){
+            for(int i = 0; i < n; i ++){
+                ans[i] = (ans[i] - (1 << k) + n) % n;
+            }
+            count_sort(ans, c);
+            vector<int> c_new(n);
+            c_new[ans[0]] = 0;
+            for(int i = 1; i < n; i++){
+                pair<int,int> prev = {c[ans[i - 1]], c[(ans[i - 1] + (1 << k)) % n]};
+                pair<int,int> now = {c[ans[i]], c[(ans[i] + (1 << k)) % n]};
+                if(now == prev) c_new[ans[i]] = c_new[ans[i - 1]];
+                else c_new[ans[i]] = c_new[ans[i - 1]] + 1;
+            }
+            c = c_new;
+            k++;
+            /*使用基数排序
+             * vector<pair<pair<int,int>,int>> a(n);
+            for(int i = 0; i < n; i++) a[i] = {{c[i], c[(i + (1 << k)) % n]}, i};
+            //sort(a.begin(), a.end());做法一,使用nlogn的排序
+            Radix_Sort(a);
+            for(int i = 0; i < n; i++) ans[i] = a[i].second;
+            c[ans[0]] = 0;
+            for(int i = 1; i < n; i++){
+                if(a[i].first == a[i - 1].first)
+                    c[ans[i]] = c[ans[i -1]];
+                else
+                    c[ans[i]] = c[ans[i - 1]] + 1;
+            }
+            k++;*/
+        }
+        vector<int> lcp(n);//lcp[i]为后缀数组中第i个字符串和第i - 1个字符串的最长公共前缀
+        {
+            k = 0;
+            for(int i = 0; i < n - 1; i++){
+                int idx = c[i];
+                int j = ans[idx - 1];
+                while(s[idx + k] == s[j + k]) k++;
+                lcp[idx] = k;
+                k = max(k - 1, 0);
+            }
+        }
+        for(auto& i : ans) cout << i << " ";
+        cout << endl;
+        return 0;
+    }
+}
+int main(){
+#ifdef LOCAl
+    fr("D:\\Algorithm\\input.txt");
+    fw("D:\\Algorithm\\output.txt");
+    int t ;
+    cin >> t;
+    for(int i = 1; i <= t; i++){
+        cout << "CASE #" << t << ":";
+        SOLVE::main();
+    }
+#endif
+    SOLVE::main();
+    return 0;
+}

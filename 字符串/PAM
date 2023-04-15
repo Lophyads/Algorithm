@@ -1,0 +1,56 @@
+namespace PAM{
+	using ll = long long;
+	const int N = 1e5 + 10;
+	int len[N], link[N], tr[N][26];
+	int slink[N], diff[N];
+	int cnt[N]; // 以i节点结尾的回文后缀个数
+	ll ccnt[N]; // i节点代表的回文串在原串的出现次数
+	int S[N];
+	int hf[N]; // 长度小于等于当前回文串一半的最长回文后缀
+	int tot, sz, last;
+	inline void init(){
+		sz = tot = last = 0;
+		S[sz ++] = -1;
+		link[0] = 1;
+		len[1] = -1;
+		memset(tr[0], 0, sizeof tr[0]);
+		memset(tr[1], 0, sizeof tr[1]);
+		tot = 2;
+	}
+	inline int get_link(int x){
+		while(S[sz - len[x] - 2] != S[sz - 1]) x = link[x];
+		return x;
+	}
+	inline void insert(int c){
+		S[sz++] = c;
+		last = get_link(last);
+		if(!tr[last][c]){
+			len[tot] = len[last] + 2;
+			memset(tr[tot], 0, sizeof tr[tot]);
+			ccnt[tot] = 0;
+			link[tot] = tr[get_link(link[last])][c];
+			diff[tot] = len[tot] - len[link[tot]];
+			cnt[tot] = cnt[link[tot]] + 1;
+			if(diff[tot] == diff[link[tot]])
+				slink[tot] = slink[link[tot]];
+			else slink[tot] = link[tot];
+			if(len[tot] <= 2) hf[tot] = link[tot];
+			else{
+				int tmp = hf[last];
+				while(S[sz - len[tmp] - 2] != S[sz - 1] || ((len[tmp] + 2) << 1) > len[tot]) tmp = link[tmp];
+				hf[tot] = tr[tmp][c];			
+			}
+			tr[last][c] = tot++;
+		}
+		last = tr[last][c];
+		++ ccnt[last];
+	}
+	inline void psort(){
+		// 可不排序
+		vector<int> c(sz), rk(tot);
+		for(int i = 2; i < tot; ++ i) c[len[i]] += 1;
+		for(int i = 1; i < sz; ++ i) c[i] += c[i - 1];
+		for(int i = 2; i < tot; ++ i) rk[c[len[i]] --] = i;
+		for(int i = tot - 1; i; -- i) ccnt[link[rk[i]]] += ccnt[rk[i]];
+	}
+}

@@ -1,6 +1,7 @@
 namespace SAM{
+	using ll = long long;
 	// SAM 的总状态数不超过2n - 1, 总转移数不超过3n - 4
-	const int maxn = 1e6 + 10;
+	const int maxn = 1e5 + 10;
 	ll cnt = 0; // 本质不同子串个数
 	struct state{
 		int len, fa;
@@ -9,8 +10,13 @@ namespace SAM{
 		ll num; // 该节点往下走的路径数
 	}sam[maxn << 1];
 	int tot = 1, last = 1;
+	inline void init(){
+		tot = last = 1;
+		memset(sam[1].next, 0, sizeof sam[1].next);
+	}
 	void insert(int c){
 		int cur = ++ tot;
+		memset(sam[cur].next, 0, sizeof sam[cur].next);
 		sam[cur].sz = 1;
 		sam[cur].len = sam[last].len + 1;
 		int p = last;
@@ -93,6 +99,77 @@ namespace SAM{
 		}
 		return ans;
 	}
+	inline void psort(){
+		vector<int> c(tot + 1), rk(tot + 1);
+		for(int i = 1; i <= tot; ++ i) c[len[i]] += 1;
+		for(int i = 1; i <= tot; ++ i) c[i] += c[i - 1];
+		for(int i = 1; i < tot; ++ i) rk[c[len[i]] --] = i;
+	}
+	int lcs(const string& s){ // 求最长公共子串
+		// 先对s1建sam, 在用s2在sam上求
+		int p = 1, ans = 0, len = 0;
+		for(char c : s){
+			c -= 'a';
+			while(p != 1 && !sam[p].next[c]) p = sam[p].fa, len = sam[p].len;
+			if(sam[p].next[c]) p = sam[p].next[c], ++ len;
+			ans = max(ans, len);
+		}
+		return ans;
+	}
+	int lcs(const vector<string>& ss){ // 求多个字符串的最长公共子串
+		for(auto& c : ss[0]) insert(c - 'a');
+		vector<int> mx(tot + 1), mi(tot + 1, 1e9);
+		vector<int> cnt(tot + 1);
+		vector<int> rk(tot + 1);
+		for(int i = 1; i <= tot; ++ i) cnt[sam[i].len] += 1;
+		for(int i = 1; i <= tot; ++ i) cnt[i] += cnt[i - 1];
+		for(int i = 1; i <= tot; ++ i) rk[cnt[sam[i].len]--] = i;			
+		for(int i = 1; i < (int)ss.size(); ++ i){
+			string s = ss[i];
+			int p = 1, len = 0;
+			for(auto c : s){
+				c -= 'a';
+				while(p != 1 && !sam[p].next[c]) p = sam[p].fa, len = sam[p].len;
+				if(sam[p].next[c]){
+					++ len;
+					p = sam[p].next[c];
+					mx[p] = max(mx[p], len);
+				}
+			}
+			for(int j = tot; j; -- j) {
+				int u = rk[j], f = sam[rk[j]].fa;
+				mx[f] = max(mx[f], min(mx[u], sam[f].len));
+				mi[u] = min(mi[u], mx[u]);
+				mx[u] = 0;
+			}
+		}
+		int ans = 0;
+		for(int i = 1; i <= tot; ++ i) ans = max(ans, mi[i]);
+		return ans;
+	}
+	ll match(const string& s){
+		// 求两个串中子串相同的方案数, 先对s1建sam, 在把s2放到sam上匹配
+		vector<int> cnt(tot + 1);
+		vector<int> rk(tot + 1);
+		vector<ll> sum(tot + 1); // 以当前点代表的后缀的子串的所有后缀出现次数
+		for(int i = 1; i <= tot; ++ i) cnt[sam[i].len] += 1;
+		for(int i = 1; i <= tot; ++ i) cnt[i] += cnt[i - 1];
+		for(int i = 1; i <= tot; ++ i) rk[cnt[sam[i].len]--] = i;	
+		for(int i = tot; i; i --) sam[sam[rk[i]].fa].sz += sam[rk[i]].sz;
+		for(int i = 1; i <= tot; ++ i) sum[rk[i]] = sum[sam[rk[i]].fa] + 1ll * (sam[rk[i]].len - sam[sam[rk[i]].fa].len) * sam[rk[i]].sz;		
+		ll ans = 0;
+		int p = 1, len = 0;
+		for(char c : s){
+			c -= 'a';
+			while(p != 1 && !sam[p].next[c]) p = sam[p].fa, len = sam[p].len;
+			if(sam[p].next[c]){
+				++ len;
+				p = sam[p].next[c];
+				ans += sum[sam[p].fa] + 1ll * (len - sam[sam[p].fa].len) * sam[p].sz;
+			}
+		}
+		return ans;
+	}
 	/* 本质不同子串个数
 	   每个节点代表(cur.len - cur.fa.len)个不同子串
 	   对所有节点求和即答案
@@ -101,5 +178,10 @@ namespace SAM{
 	/* 所有不同子串的总长度
 		每个节点上子串的总长度为(cur.len + (cur.len + 1)) / 2 减去fa节点的总长度
 		对所有节点求和即答案
+	*/
+
+	/* 查询字符串P在T中第一次出现位置
+		fir(cur) = len(cur)
+		答案就是fir(P) - |P|
 	*/
 };

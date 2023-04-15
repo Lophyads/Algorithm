@@ -1,0 +1,120 @@
+namespace GSAM{
+	using ll = long long;
+	const int N = 1e6 + 10;
+	int tot1 = 1;
+	struct trie{
+		int fa, next[26], c;
+	}tr[N];
+	inline void insert(string s){
+		int cur = 1;
+		for(char& c : s){
+			int x = c - 'a';
+			if(!tr[cur].next[x]) {
+				tr[cur].next[x] = ++ tot1;
+				tr[tot1].fa = cur, tr[tot1].c = x;
+			}
+			cur = tr[cur].next[x]; 
+		}
+	}
+	
+	struct state{
+		int len, fa;
+		int next[26];
+	}sam[N << 1];
+	int tot2 = 1, pos[N];
+	ll cnt = 0;// 本质不同子串个数
+	inline int insert(int c, int last){
+		int cur = ++ tot2;
+		sam[cur].len = sam[last].len + 1;
+		int p = last;
+		while(p && !sam[p].next[c]) sam[p].next[c] = cur, p = sam[p].fa;
+		if(!p){
+			sam[cur].fa = 1;
+			cnt += sam[cur].len;
+		}
+		else{
+			int q = sam[p].next[c];
+			if(sam[p].len + 1 == sam[q].len){
+				sam[cur].fa = q;
+				cnt += sam[cur].len - sam[q].len;
+			}
+			else{
+				int tmp = ++tot2;
+				sam[tmp] = sam[q];
+				sam[tmp].len = sam[p].len + 1;
+				while(p && sam[p].next[c] == q){
+					sam[p].next[c] = tmp;
+					p = sam[p].fa;
+				}
+				sam[cur].fa = sam[q].fa = tmp;
+				cnt += sam[cur].len - sam[tmp].len;
+			}
+		}
+		return cur;
+	}
+	inline void build(){
+		queue<int> q;
+		for(int i = 0; i < 26; ++ i) 
+			if(tr[1].next[i]) q.push(tr[1].next[i]);
+		pos[1] = 1;
+		while(!q.empty()){
+			int u = q.front();
+			q.pop();
+			pos[u] = insert(tr[u].c, pos[tr[u].fa]);
+			for(int i = 0; i < 26; ++ i) {
+				if(tr[u].next[i]) q.push(tr[u].next[i]);	
+			}
+		}
+	}
+};
+
+
+// 在线构造
+
+const int N = 1e6 + 10;
+int fa[N << 1], tr[N << 1][26], len[N << 1];
+int tot;
+void init(){
+	tot = 1;
+}
+inline int insert(int c, int last){
+	if(tr[last][c]){
+		int p = last, x = tr[p][c];
+		if(len[p] + 1 == len[x]) {
+			// 当前串在x
+			return x;
+		}
+		else{
+			int cur = ++ tot;
+			// 在cur
+			len[cur] = len[p] + 1;
+			for(int i = 0; i < 26; ++ i) tr[cur][i] = tr[x][i];
+			while(p && tr[p][c] == x){
+				tr[p][c] = cur;
+				p = fa[p];
+			}
+			fa[cur] = fa[x], fa[x] = cur;
+			return cur;
+		}
+	}
+	int cur = ++ tot, p = last;
+	len[cur] = len[p] + 1;
+	while(p && !tr[p][c]) tr[p][c] = cur, p = fa[p];
+	if(!p) fa[cur] = 1;
+	else{
+		int x = tr[p][c];
+		if(len[p] + 1 == len[x]) fa[cur] = x;
+		else{
+			int y = ++ tot;
+			len[y] = len[p] + 1;
+			for(int i = 0; i < 26; ++ i) tr[y][i] = tr[x][i];
+			while(p && tr[p][c] == x) tr[p][c] = y, p = fa[p];
+			fa[y] = fa[x], fa[cur] = fa[x] = y;
+		}
+	}
+	return cur;
+}
+inline void insert(const string& s){
+	int last = 1;
+	for(char c : s) last = insert(c - 'a', last);
+}

@@ -1,32 +1,26 @@
-#include<bits/stdc++.h>
-using namespace std;
-int main(){//详解解释https://oi-wiki.org/string/manacher/
-    string s;
-    cin >> s;
-    int len = s.size();
-    string new_s = "#";
-    for(auto& c : s){
-        new_s += c;
-        new_s += '#';
-    }
-    int new_len = new_s.size();
-    vector<int> d(new_len, 0);
-    int mxlen = 0;
-    pair<int,int> ans;
-    //d[i]为以i为中心的回文串长度
-    for(int i = 0, l = 0, r = -1; i < new_len; i++){//(l,r)左闭右闭区间
-        int k = i >= r ? 1 : min(d[l + r - i], r - i);
-        while(i - k >= 0 and i + k < new_len and new_s[i + k] == new_s[i - k]) k++;
-        d[i] = k;
-        if(i + k - 1 > r){
-            r = i + k - 1;
-            l = i - k + 1;
-        }
-        if((r - l) / 2 > mxlen){
-            mxlen = (r - l) / 2;
-            ans = {(i - k + 1) / 2, (i + k - 1) / 2};
-        }
-    }
-    cout << s.substr(ans.first, ans.second - ans.first) << endl;
-    return 0;
-}
+namespace Manacher{
+	const int N = 1e5 + 10;
+	char s[N << 1], t[N];
+	int d[N << 1];// 以i为中心的回文半径
+	int n;
+	int ed[N];// 以i结尾的最长回文串长度
+	inline void init(){
+		int len = strlen(t + 1);
+		s[0] = '!', s[n = 1] = '#';
+		for(int i = 1; i <= len; ++ i){
+			s[++n] = t[i];
+			s[++n] = '#';
+		}
+		s[++n] = '@';
+		for(int i = 1, r = 0, lst = 0; i <= n; ++ i){
+			d[i] = r < i ? 1 : min(r - i + 1, d[2 * lst - i]);
+			while(s[i - d[i]] == s[i + d[i]]) ++ d[i];
+			if(i + d[i] - 1 > r){
+				for(int j = r + 1; j <= i + d[i] - 1; ++ j){
+					if(j % 2 == 0) ed[j >> 1] = j - i + 1;
+				}
+				r = i + d[i] - 1, lst = i;
+			}
+		}
+	}  
+};

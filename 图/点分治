@@ -1,0 +1,38 @@
+vector<pair<int,int>> g[N];
+int n;
+int sz[N], vis[N];
+int ctr = 0;
+void dfs(int u, int fa = 0){
+	int mxs = 0;
+	sz[u] = 1;
+	for(auto& [v, w] : g[u]){
+		if(v != fa && !vis[v]){
+			dfs(v, u);
+			if(ctr) return ;
+			sz[u] += sz[v];
+			mxs = max(mxs, sz[v]);
+		}
+	}
+	mxs = max(mxs, n - sz[u]);
+	if(mxs <= n / 2){
+		ctr = u;
+		sz[fa] = n - sz[u];
+	}
+	return ;
+}
+void run(int u){
+	/*
+	 统计答案
+	*/
+	vis[u] = 1;
+	for(auto& [v, w] : g[u]){
+		if(!vis[v]) {
+			n = sz[v];
+			ctr = 0;
+			dfs(v, u);
+			run(ctr);
+		}
+	}
+}
+dfs(1);
+run(ctr);
